@@ -1,0 +1,11 @@
+# Editor cache
+.idea/
+.vscode/
+.vs/
+
+# Build and intermediates
+bin/
+obj/
+
+# User settings
+*.user
