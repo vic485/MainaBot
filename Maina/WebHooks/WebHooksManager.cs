@@ -28,15 +28,18 @@ namespace Maina.WebHooks
 		/// </summary>
 		/// <param name="receiveTo">An array with the prefixes for which to accept requests.
 		/// <para>If null default prefixes are "http://*:8080/webhooks/" and "https://*:443/webhooks/"</para></param>
-		public WebHooksManager (string [] receiveTo = null) {
-			_listener = new WebHookListener(this, receiveTo);
+		public WebHooksManager () {
 			
 		}
 
+		
+		
 		/// <summary>
 		/// Starts listening and logs the addresses it's listening to.
 		/// </summary>
-		public void Initialize () {
+		/// <param name="receiveTo">The addresses to listen to.</param>
+		public void Initialize (string [] receiveTo = null) {
+			_listener = new WebHookListener(this, receiveTo);
 			Task.Run(() => _listener.StartListening());
 			string [] whURLs = _listener.GetWebHookURLs();
 			if (whURLs != null) {
@@ -52,9 +55,9 @@ namespace Maina.WebHooks
 		/// <summary>
 		/// Resets the webhook listener, freeing any old resources.
 		/// </summary>
-		public void ResetServer () {
+		public void ResetServer (string [] receiveTo = null) {
 			_listener.StopListening();
-			_listener = new WebHookListener(this);
+			_listener = new WebHookListener(this, receiveTo);
 			Task.Run(() => _listener.StartListening());
 		}
 
