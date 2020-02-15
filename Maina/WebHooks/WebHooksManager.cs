@@ -23,11 +23,19 @@ namespace Maina.WebHooks
 
 		private WebHookListener _listener = null;
 
-		public WebHooksManager () {
-			_listener = new WebHookListener(this);
+		/// <summary>
+		/// A newly created WebHooksManager is not listening to any requests. Use Initialize to start listening.
+		/// </summary>
+		/// <param name="receiveTo">An array with the prefixes for which to accept requests.
+		/// <para>If null default prefixes are "http://*:8080/webhooks/" and "https://*:443/webhooks/"</para></param>
+		public WebHooksManager (string [] receiveTo = null) {
+			_listener = new WebHookListener(this, receiveTo);
 			
 		}
 
+		/// <summary>
+		/// Starts listening and logs the addresses it's listening to.
+		/// </summary>
 		public void Initialize () {
 			Task.Run(() => _listener.StartListening());
 			string [] whURLs = _listener.GetWebHookURLs();
