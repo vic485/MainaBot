@@ -25,6 +25,10 @@ namespace Maina.WebHooks
 
 		public WebHooksManager () {
 			_listener = new WebHookListener(this);
+			
+		}
+
+		public void Initialize () {
 			Task.Run(() => _listener.StartListening());
 			string [] whURLs = _listener.GetWebHookURLs();
 			if (whURLs != null) {

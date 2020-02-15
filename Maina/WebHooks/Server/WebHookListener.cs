@@ -52,7 +52,7 @@ namespace Maina.WebHooks.Server
 				string ip;
 				using (WebClient wc = new WebClient())
 					ip = wc.DownloadString("http://ipinfo.io/ip");
-
+				ip = ip.TrimEnd();
 				string [] urls = new string [_listener.Prefixes.Count];
 				int i = 0; 
 				foreach (string p in _listener.Prefixes) {
@@ -89,8 +89,10 @@ namespace Maina.WebHooks.Server
 				_observer?.OnWebHookListenFail(e);
 			}
 			finally {
-				_listener?.Stop();
-				_listener?.Close();
+				if (_listener.IsListening) {
+					_listener?.Stop();
+					_listener?.Close();
+				}
 				_listener = null;
 				ListenerStopped.Set();
 			}
