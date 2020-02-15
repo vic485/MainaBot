@@ -7,6 +7,7 @@ using Discord.WebSocket;
 using Maina.Core;
 using Maina.Core.Logging;
 using Maina.Database;
+using Maina.WebHooks;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Maina
@@ -22,7 +23,13 @@ namespace Maina
                 services.GetRequiredService<DatabaseManager>().CheckConfig();
                 await services.GetRequiredService<DiscordHandler>().InitializeAsync(services).ConfigureAwait(false);
 
-                // Keep bot alive
+
+
+                
+				/* TODO
+				 * Here you would put a command line program to manage the bot.
+				 * Mainly so it can be shutdown safely (close/Dispose all the services). 
+				 * (IDisposable objects may not necessarilly be Disposed on program exit). */
                 await Task.Delay(-1);
             }
         }
@@ -44,6 +51,7 @@ namespace Maina
                 }))
                 .AddSingleton<DatabaseManager>()
                 .AddSingleton<DiscordHandler>()
+				.AddSingleton<WebHooksManager>()
                 .BuildServiceProvider();
     }
 }
