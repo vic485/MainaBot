@@ -43,6 +43,31 @@ namespace Maina.WebHooks.Server
 			_observer = observer;
 		}
 
+
+		/// <summary>
+		/// </summary>
+		/// <returns>An array with the public WebHook URLs or null if it fails.</returns>
+		public string [] GetWebHookURLs () {
+			try {
+				string ip;
+				using (WebClient wc = new WebClient())
+					ip = wc.DownloadString("http://ipinfo.io/ip");
+
+				string [] urls = new string [_listener.Prefixes.Count];
+				int i = 0; 
+				foreach (string p in _listener.Prefixes) {
+					urls[i] = p.Replace("*", ip);
+					i++;
+				}
+
+				return urls;
+			}
+			catch (Exception) {
+				return null;
+			}			
+		}
+
+		
 		
 		private bool _end = false;
 		/// <summary>
@@ -50,6 +75,7 @@ namespace Maina.WebHooks.Server
 		/// <para>This call is blocking, it is recommended to use Task.Run or another threading mechanism to call this function.</para>
 		/// </summary>
 		public void StartListening () {
+			
 			try {
 				_listener.Start();
 				while (!_end) {

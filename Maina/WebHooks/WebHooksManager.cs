@@ -2,6 +2,7 @@
 using System;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Maina.Core.Logging;
 
 namespace Maina.WebHooks
 {
@@ -25,6 +26,15 @@ namespace Maina.WebHooks
 		public WebHooksManager () {
 			_listener = new WebHookListener(this);
 			Task.Run(() => _listener.StartListening());
+			string [] whURLs = _listener.GetWebHookURLs();
+			if (whURLs != null) {
+				string urls = "";
+				foreach (string url in whURLs)
+					urls += Environment.NewLine + url;
+				Logger.LogInfo("WebHook Server Listening for HTTP requests on:" + urls);
+			}
+			else
+				Logger.LogWarning("Could not retrieve public WebHook URLs.");
 		}
 
 		/// <summary>
