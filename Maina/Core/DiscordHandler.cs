@@ -89,7 +89,7 @@ namespace Maina.Core
 		
 		private void WebHookSystemFail(object sender, WebHookFailEventArgs e)
 		{
-			Logger.LogError("Error in WebHook server.");
+			Logger.LogError("Error in WebHook server: " + e.Exception.Message);
 			if (!e.IsServerStillRunning)
 				_webHooksManager.ResetServer();
 		}

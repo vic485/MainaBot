@@ -22,7 +22,9 @@ namespace Maina
             {
                 services.GetRequiredService<DatabaseManager>().CheckConfig();
                 await services.GetRequiredService<DiscordHandler>().InitializeAsync(services).ConfigureAwait(false);
-				services.GetService<WebHooksManager>().Initialize();
+
+				string [] trusted = { "Kuuki-Scans" };
+				services.GetService<WebHooksManager>().Initialize(null, trusted);
 
 
 

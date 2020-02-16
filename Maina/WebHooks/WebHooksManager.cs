@@ -33,18 +33,22 @@ namespace Maina.WebHooks
 		}
 
 		
-		
+		private string [] _trustedUserAgents;
 		/// <summary>
 		/// Starts listening and logs the addresses it's listening to.
 		/// </summary>
 		/// <param name="receiveTo">The addresses to listen to.</param>
-		public void Initialize (string [] receiveTo = null) {
+		public void Initialize (string [] receiveTo = null, string [] trustedUserAgents = null) {
 			_listener = new WebHookListener(this, receiveTo);
+			_trustedUserAgents = trustedUserAgents;
+			if (_trustedUserAgents != null)
+				_listener.TrustedUserAgents.AddRange(_trustedUserAgents);
+
 			Task.Run(() => {
 				try {
 					_listener.StartListening();
 				}
-				catch (Exception e) {
+				catch (Exception) {
 					Logger.LogError("Could not start HTTP server. Is the bot running with privileges?");
 				}
 			});
@@ -67,6 +71,8 @@ namespace Maina.WebHooks
 		public void ResetServer (string [] receiveTo = null) {
 			_listener.StopListening();
 			_listener = new WebHookListener(this, receiveTo);
+			if (_trustedUserAgents != null)
+				_listener.TrustedUserAgents.AddRange(_trustedUserAgents);
 			Task.Run(() => _listener.StartListening());
 		}
 
@@ -92,9 +98,9 @@ namespace Maina.WebHooks
 			
 		}
 
-		public void OnWebHookListenFail(Exception e)
+		public void OnWebHookListenFail(Exception e, bool stillAlive)
 		{
-			SystemFailed?.Invoke(this, new WebHookFailEventArgs(e, false));
+			SystemFailed?.Invoke(this, new WebHookFailEventArgs(e, stillAlive));
 		}
 
 		public void OnWebHookRequestProcessFail(Exception e)
