@@ -75,13 +75,15 @@ namespace Maina.Core
             _serviceProvider = services;
             await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), services);
             Logger.LogVerbose($"Commands registered: {_commandService.Commands.Count()}.");
+
         }
 
-        /// <summary>
-        /// Sends discord log messages to Reimu's logger
-        /// </summary>
-        /// <param name="logMessage">Discord message</param>
-        private static Task Log(LogMessage logMessage)
+      
+		/// <summary>
+		/// Sends discord log messages to Reimu's logger
+		/// </summary>
+		/// <param name="logMessage">Discord message</param>
+		private static Task Log(LogMessage logMessage)
         {
             Logger.LogInfo(logMessage.Message ?? logMessage.Exception.Message);
             return Task.CompletedTask;

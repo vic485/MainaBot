@@ -3,29 +3,122 @@ using System;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Maina.Core.Logging;
+using Discord;
+using Maina.Database;
+using Discord.WebSocket;
 
 namespace Maina.WebHooks
 {
 	public class WebHooksManager : IDisposable, WebHookObserver
 	{
-		#region Events
-		/// <summary>
-		/// The event fired when a payload is received.
-		/// </summary>
-		public event WebHookPayloadEventHandler PayloadReceived;
-		/// <summary>
-		/// The event fired if there was an exception in the webhook server.
-		/// </summary>
-		public event WebHookFailEventHandler SystemFailed;
+		
 
-		#endregion
-
+		private readonly DatabaseManager _dataBaseManager;
+		private readonly DiscordSocketClient _discordSocketClient;
 
 		private WebHookListener _listener = null;
 
-		public WebHooksManager () {
-			_listener = new WebHookListener(this);
-			Task.Run(() => _listener.StartListening());
+
+		/// <summary>
+		/// A newly created WebHooksManager is not listening to any requests. Use Initialize to start listening.
+		/// </summary>
+		/// <param name="receiveTo">An array with the prefixes for which to accept requests.
+		/// <para>If null default prefixes are "http://*:8080/webhooks/" and "https://*:443/webhooks/"</para></param>
+		public WebHooksManager (DiscordSocketClient client, DatabaseManager database) {
+			_dataBaseManager = database;
+			_discordSocketClient = client;
+		}
+
+
+
+		public void OnPayloadReceived(PayloadType type, string payload)
+		{
+
+			EmbedBuilder eb = null;
+
+			if (type == PayloadType.GitHubRelease) {
+				try {
+					GitHubWebHookData ghdata = JsonConvert.DeserializeObject<GitHubWebHookData>(payload);
+					eb = new EmbedBuilder { Color = new Color(0xFFFFFF) };
+					eb.WithAuthor("I've heard some great news!");
+					eb.WithThumbnailUrl("https://cdn.discordapp.com/attachments/677950856921874474/678657998637236266/Miharu_Bot_Final.png");
+					eb.WithTitle(ghdata.release.name);
+					eb.WithUrl(ghdata.release.html_url);
+					eb.WithDescription("There is a new version of Miharu Available!");
+				}
+				catch (Exception e) {
+					Logger.LogError("Error parsing GitHub release payload: " + e.Message);
+				}
+			}
+			else {
+				eb = new EmbedBuilder {Color = new Color(0xFFFFFF) };
+				eb.WithAuthor("I've heard some great news!");
+				eb.WithTitle(payload);
+			}
+
+			if (eb != null) {
+				//TODO send messages to all news channels.
+			}			
+			
+		}
+
+		public void OnWebHookListenFail(Exception e, bool stillAlive)
+		{
+			Logger.LogError("Error in WebHook server: " + e.Message);
+			if (!stillAlive)
+				ResetServer();
+		}
+
+		public void OnWebHookRequestProcessFail(Exception e)
+		{
+			Logger.LogError("Error in WebHook server: " + e.Message);
+		}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		#region WebHookListener Stuff
+
+		private string [] _trustedUserAgents;
+		/// <summary>
+		/// Starts listening and logs the addresses it's listening to.
+		/// </summary>
+		/// <param name="receiveTo">The addresses to listen to.</param>
+		public void Initialize (string [] receiveTo = null, string [] trustedUserAgents = null) {
+			_listener = new WebHookListener(this, receiveTo);
+			_trustedUserAgents = trustedUserAgents;
+			if (_trustedUserAgents != null)
+				_listener.TrustedUserAgents.AddRange(_trustedUserAgents);
+
+			Task.Run(() => {
+				try {
+					_listener.StartListening();
+				}
+				catch (Exception) {
+					Logger.LogError("Could not start HTTP server. Is the bot running with privileges?");
+				}
+			});
+
+
+>>>>>>> Stashed changes
 			string [] whURLs = _listener.GetWebHookURLs();
 			if (whURLs != null) {
 				string urls = "";
@@ -46,10 +139,12 @@ namespace Maina.WebHooks
 			Task.Run(() => _listener.StartListening());
 		}
 
+		#endregion
 
 
 
 
+<<<<<<< Updated upstream
 		public void OnPayloadReceived(PayloadType type, string payload)
 		{
 						
@@ -80,6 +175,8 @@ namespace Maina.WebHooks
 
 
 
+=======
+>>>>>>> Stashed changes
 
 
 
