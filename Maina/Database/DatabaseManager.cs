@@ -56,6 +56,14 @@ namespace Maina.Database
             using (var session = Store.OpenSession())
                 return session.Load<T>(id); // Will return null if non-existent
         }
+
+		public GuildConfig[] GetAllGuilds () 
+        {
+			
+            Logger.LogVerbose($"Retrieving all {typeof(GuildConfig).Name} from database.");
+            using (var session = Store.OpenSession())
+				return session.Advanced.LoadStartingWith<GuildConfig>("guild-");
+        }
         
         public void AddGuild(ulong id, string name)
         {

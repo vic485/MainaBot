@@ -6,6 +6,8 @@ using Maina.Core.Logging;
 using Discord;
 using Maina.Database;
 using Discord.WebSocket;
+using Maina.Core;
+using Maina.Database.Models;
 
 namespace Maina.WebHooks
 {
@@ -39,7 +41,7 @@ namespace Maina.WebHooks
 			if (type == PayloadType.GitHubRelease) {
 				try {
 					GitHubWebHookData ghdata = JsonConvert.DeserializeObject<GitHubWebHookData>(payload);
-					eb = new EmbedBuilder { Color = new Color(0xFFFFFF) };
+					eb = new EmbedBuilder { Color = new Color((uint) EmbedColor.Aqua) };
 					eb.WithAuthor("I've heard some great news!");
 					eb.WithThumbnailUrl("https://cdn.discordapp.com/attachments/677950856921874474/678657998637236266/Miharu_Bot_Final.png");
 					eb.WithTitle(ghdata.release.name);
@@ -51,13 +53,22 @@ namespace Maina.WebHooks
 				}
 			}
 			else {
-				eb = new EmbedBuilder {Color = new Color(0xFFFFFF) };
+				eb = new EmbedBuilder {Color = new Color((uint) EmbedColor.Green) };
 				eb.WithAuthor("I've heard some great news!");
 				eb.WithTitle(payload);
 			}
 
 			if (eb != null) {
-				//TODO send messages to all news channels.
+				foreach (GuildConfig gc in _dataBaseManager.GetAllGuilds()) {
+					try {
+						SocketGuild guild = _discordSocketClient.GetGuild(gc.NumberId);
+						if (gc.NewsChannel.HasValue) {
+							SocketTextChannel channel = guild.GetTextChannel(gc.NewsChannel.Value);
+							channel.SendMessageAsync(string.Empty, false, eb.Build());
+						}
+					}
+					catch (Exception){ }
+				}
 			}			
 			
 		}
