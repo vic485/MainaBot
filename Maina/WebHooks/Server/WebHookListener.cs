@@ -1,6 +1,10 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
+using System.Net.Http;
+using System.Text;
 using System.Threading;
 
 namespace Maina.WebHooks.Server
@@ -22,6 +26,10 @@ namespace Maina.WebHooks.Server
 
 		private HttpListener _listener = null;
 		private WebHookObserver _observer;
+		
+		public List<string> TrustedUserAgents {
+			get; private set;
+		} = new List<string>();
 
 
 
@@ -32,6 +40,9 @@ namespace Maina.WebHooks.Server
 		/// <param name="receiveTo">An array with the prefixes for which to accept requests.
 		/// <para>If null default prefixes are "http://*:8080/webhooks/" and "https://*:443/webhooks/"</para></param>
 		public WebHookListener (WebHookObserver observer, string [] receiveTo = null) {
+			TrustedUserAgents.Add("GitHub-Hookshot");
+
+
 			if (receiveTo == null) {
 				receiveTo = new string[2];
 				receiveTo[0] = "http://*:8080/webhooks/";
@@ -52,7 +63,7 @@ namespace Maina.WebHooks.Server
 				string ip;
 				using (WebClient wc = new WebClient())
 					ip = wc.DownloadString("http://ipinfo.io/ip");
-
+				ip = ip.TrimEnd();
 				string [] urls = new string [_listener.Prefixes.Count];
 				int i = 0; 
 				foreach (string p in _listener.Prefixes) {
@@ -76,8 +87,8 @@ namespace Maina.WebHooks.Server
 		/// </summary>
 		public void StartListening () {
 			
-			try {
-				_listener.Start();
+			_listener.Start();
+			try {				
 				while (!_end) {
 
 					_listener.BeginGetContext(new AsyncCallback(RetrieveRequest), _listener);
@@ -86,11 +97,13 @@ namespace Maina.WebHooks.Server
 				}
 			}
 			catch (Exception e) {
-				_observer?.OnWebHookListenFail(e);
+				_observer?.OnWebHookListenFail(e, false);
 			}
 			finally {
-				_listener?.Stop();
-				_listener?.Close();
+				if (_listener.IsListening) {
+					_listener?.Stop();
+					_listener?.Close();
+				}
 				_listener = null;
 				ListenerStopped.Set();
 			}
@@ -105,6 +118,14 @@ namespace Maina.WebHooks.Server
 				KeepWorking.Set();
 				ListenerStopped.WaitOne();
 			}
+		}
+
+		private bool RespondWithError (int error, HttpListenerContext context) {
+			using (HttpListenerResponse failResponse = context.Response) {
+				failResponse.StatusCode = error;
+				failResponse.Close();
+			}
+			return true;
 		}
 
 
@@ -122,54 +143,68 @@ namespace Maina.WebHooks.Server
 				
 				HttpListenerRequest request = context.Request;
 				
-				if (request.UserAgent.Contains("GitHub-Hookshot"))
-					release = request.Headers.Get("X-GitHub-Event").Contains("release");
-
-
-				if (request.HasEntityBody) {
-					using (StreamReader input = new StreamReader(request.InputStream)) {
-						payload = input.ReadToEnd();
-
-						input.Close();
-					}
-				
+				if (request.HttpMethod != "POST") {
+					RespondWithError(405, context); //Method not allowed
+					return;
+				}					
+				if (request.UserAgent == null || TrustedUserAgents.Find(x => request.UserAgent.Contains(x)) == null) {
+					RespondWithError(401, context); //Unauthorized
+					return;
 				}
+				if (!request.HasEntityBody) {
+					RespondWithError(400, context); //Bad Request
+					return;
+				}
+
+
+				if (request.Headers.Get("X-GitHub-Event") != null)
+					release = request.Headers.Get("X-GitHub-Event") == ("release");
+
+					
+				using (StreamReader input = new StreamReader(request.InputStream, request.ContentEncoding ?? Encoding.UTF8)) {
+					payload = input.ReadToEnd();
+
+					input.Close();
+				}
+
+				HttpListenerResponse response = context.Response;
+				/*string responseString = "";
+				byte [] buff = Encoding.UTF8.GetBytes(responseString);
+				response.ContentLength64 = buff.Length;*/
+
+				response.StatusCode = 200; //OK
+				response.Close();
+				answered = true;
+
+				/*using (Stream output = response.OutputStream) {
+					output.Write(buff, 0, buff.Length);
+					output.Close();
+				}*/
+				
+					
 			}
 			catch(Exception e) {
-				HttpListenerResponse failResponse = context.Response;
-
-				
-				
-				failResponse.StatusCode = 500; //Server Error
-				failResponse.Close();
-				answered = true;
+				answered = RespondWithError(500, context); //Internal Server Error
 				_observer?.OnWebHookRequestProcessFail(e);
 			}
+			
 
 			if (!answered){
 				try {
-					HttpListenerResponse response = context.Response;
-					/*string responseString = "";
-					byte [] buff = Encoding.UTF8.GetBytes(responseString);
-					response.ContentLength64 = buff.Length;*/
-
-					response.StatusCode = 200; //OK
-					response.Close();
-
-
-					/*using (Stream output = response.OutputStream) {
-						output.Write(buff, 0, buff.Length);
-						output.Close();
-					}*/
+					RespondWithError(500, context); //Internal Server Error
 				}
 				catch (Exception e) {
 					_observer?.OnWebHookRequestProcessFail(e);
 				}
 			}
-			if (release)
-				_observer?.OnPayloadReceived(PayloadType.GitHubRelease, payload);
-			else
-				_observer?.OnPayloadReceived(PayloadType.Unknown, payload);
+
+
+			if (payload != null) {
+				if (release)
+					_observer?.OnPayloadReceived(PayloadType.GitHubRelease, payload);
+				else
+					_observer?.OnPayloadReceived(PayloadType.Unknown, payload);
+			}
 		}
 
 

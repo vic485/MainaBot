@@ -117,8 +117,6 @@ namespace Maina.WebHooks
 				}
 			});
 
-
->>>>>>> Stashed changes
 			string [] whURLs = _listener.GetWebHookURLs();
 			if (whURLs != null) {
 				string urls = "";
@@ -144,39 +142,6 @@ namespace Maina.WebHooks
 
 
 
-<<<<<<< Updated upstream
-		public void OnPayloadReceived(PayloadType type, string payload)
-		{
-						
-			if (type == PayloadType.GitHubRelease) {
-				try {
-					GitHubWebHookData ghdata = JsonConvert.DeserializeObject<GitHubWebHookData>(payload);
-					PayloadReceived?.Invoke(this, new WebHookPayloadEventArgs(ghdata));
-				}
-				catch (Exception e) {
-					//TODO probably wanna log this
-					PayloadReceived?.Invoke(this, new WebHookPayloadEventArgs(payload));
-				}
-			}
-			else			
-				PayloadReceived?.Invoke(this, new WebHookPayloadEventArgs(payload));
-			
-		}
-
-		public void OnWebHookListenFail(Exception e)
-		{
-			SystemFailed?.Invoke(this, new WebHookFailEventArgs(e, false));
-		}
-
-		public void OnWebHookRequestProcessFail(Exception e)
-		{
-			SystemFailed?.Invoke(this, new WebHookFailEventArgs(e, true));
-		}
-
-
-
-=======
->>>>>>> Stashed changes
 
 
 

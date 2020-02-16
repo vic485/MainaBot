@@ -16,13 +16,15 @@ namespace Maina
     {
         private static async Task Main(string[] args)
         {
-            Logger.Initialize(LogType.Warning, Path.Combine(Directory.GetCurrentDirectory(), "log.txt"), "0.0.1");
+            Logger.Initialize(LogType.Debug, Path.Combine(Directory.GetCurrentDirectory(), "log.txt"), "0.0.1");
 
             using (var services = SetupServices())
             {
                 services.GetRequiredService<DatabaseManager>().CheckConfig();
                 await services.GetRequiredService<DiscordHandler>().InitializeAsync(services).ConfigureAwait(false);
 
+				string [] trusted = { "Kuuki-Scans" };
+				services.GetService<WebHooksManager>().Initialize(null, trusted);
 
 
                 

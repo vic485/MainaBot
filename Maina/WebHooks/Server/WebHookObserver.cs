@@ -21,7 +21,7 @@ namespace Maina.WebHooks.Server
 		/// Pending requests may still be processed, this is not guaranteed.</para>
 		/// </summary>
 		/// <param name="e">The exception.</param>
-		void OnWebHookListenFail (Exception e);
+		void OnWebHookListenFail (Exception e, bool stillAlive);
 
 		/// <summary>
 		/// The callback method when an exception occurs while processing a request.
