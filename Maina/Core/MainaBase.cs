@@ -25,21 +25,7 @@ namespace Maina.Core
 
         public EmbedBuilder CreateEmbed(EmbedColor color)
         {
-            // TODO: Idol Budoukan colors
-            switch (color)
-            {
-                case EmbedColor.Aqua:
-                    return new EmbedBuilder {Color = new Color(138, 247, 252)}; // Part of Tenshi's dress
-                case EmbedColor.Green: 
-                    return new EmbedBuilder {Color = new Color(0, 109, 56)}; // Sanae's eyes
-                case EmbedColor.Purple: 
-                    return new EmbedBuilder {Color = new Color(172, 130, 220)}; // Reisen's hair
-                case EmbedColor.Red: 
-                    return new EmbedBuilder {Color = new Color(255, 70, 44)}; // Reimu's outfit
-                case EmbedColor.Yellow: 
-                    return new EmbedBuilder {Color = new Color(255, 241, 3)}; // Marisa's hair
-                default: throw new ArgumentOutOfRangeException(nameof(color), color, null);
-            }
+			return new EmbedBuilder {Color = new Color((uint)color) };
         }
 
         // TODO: This might be easier/cleaner to use a system to check flags on what was changed by a command
