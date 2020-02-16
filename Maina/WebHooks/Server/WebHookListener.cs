@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Net;
+using System.Text;
 using System.Threading;
 
 namespace Maina.WebHooks.Server
@@ -76,8 +77,8 @@ namespace Maina.WebHooks.Server
 		/// </summary>
 		public void StartListening () {
 			
-			try {
-				_listener.Start();
+			_listener.Start();
+			try {				
 				while (!_end) {
 
 					_listener.BeginGetContext(new AsyncCallback(RetrieveRequest), _listener);
@@ -124,17 +125,20 @@ namespace Maina.WebHooks.Server
 				
 				HttpListenerRequest request = context.Request;
 				
-				if (request.UserAgent.Contains("GitHub-Hookshot"))
-					release = request.Headers.Get("X-GitHub-Event").Contains("release");
+				if (request.HttpMethod == "POST") {
+
+					if (request.UserAgent?.Contains("GitHub-Hookshot") ?? false)
+						release = request.Headers.Get("X-GitHub-Event").Contains("release");
 
 
-				if (request.HasEntityBody) {
-					using (StreamReader input = new StreamReader(request.InputStream)) {
-						payload = input.ReadToEnd();
+					if (request.HasEntityBody) {
+						using (StreamReader input = new StreamReader(request.InputStream, request.ContentEncoding ?? Encoding.UTF8)) {
+							payload = input.ReadToEnd();
 
-						input.Close();
-					}
+							input.Close();
+						}
 				
+					}
 				}
 			}
 			catch(Exception e) {
