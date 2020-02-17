@@ -27,12 +27,9 @@ namespace Maina
 				services.GetService<WebHooksManager>().Initialize(null, trusted);
 
 
-
-
-                
 				/* TODO
 				 * Here you would put a command line program to manage the bot.
-				 * Mainly so it can be shutdown safely (close/Dispose all the services). 
+				 * Mainly so it can be shutdown safely (close/Dispose all the services).
 				 * (IDisposable objects may not necessarilly be Disposed on program exit). */
                 await Task.Delay(-1);
             }

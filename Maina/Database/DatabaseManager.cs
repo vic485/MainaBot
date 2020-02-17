@@ -28,13 +28,13 @@ namespace Maina.Database
                     Logger.LogVerbose("Configuration exists in database.");
                     return;
                 }
-                
+
                 Logger.LogVerbose("No configuration found in database, creating now.");
                 Logger.LogForce("Enter bot token: ");
                 var token = Console.ReadLine();
                 Logger.LogForce("Enter bot prefix: ");
                 var prefix = Console.ReadLine();
-                
+
                 Save(new BotConfig
                 {
                     Id = "Config",
@@ -56,7 +56,14 @@ namespace Maina.Database
             using (var session = Store.OpenSession())
                 return session.Load<T>(id); // Will return null if non-existent
         }
-        
+
+		public GuildConfig[] GetAllGuilds ()
+        {
+            Logger.LogVerbose($"Retrieving all {typeof(GuildConfig).Name} from database.");
+            using (var session = Store.OpenSession())
+				return session.Advanced.LoadStartingWith<GuildConfig>("guild-");
+        }
+
         public void AddGuild(ulong id, string name)
         {
             using (var session = Store.OpenSession())
@@ -83,14 +90,14 @@ namespace Maina.Database
         {
             if (item == null)
                 return;
-            
+
             using (var session = Store.OpenSession())
             {
                 session.Store(item, item.Id);
                 session.SaveChanges();
             }
         }
-        
+
         /// <summary>
         /// Removes a guild from the database
         /// </summary>

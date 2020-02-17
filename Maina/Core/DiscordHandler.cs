@@ -8,7 +8,6 @@ using Discord.WebSocket;
 using Maina.Core.Logging;
 using Maina.Database;
 using Maina.Database.Models;
-using Maina.WebHooks;
 
 namespace Maina.Core
 {
@@ -17,16 +16,14 @@ namespace Maina.Core
         private readonly DiscordSocketClient _client;
         private readonly DatabaseManager _database;
         private readonly CommandService _commandService;
-		private readonly WebHooksManager _webHooksManager;
 
         private IServiceProvider _serviceProvider;
 
-        public DiscordHandler(DiscordSocketClient client, DatabaseManager database, CommandService commandService, WebHooksManager webHooksManager)
+        public DiscordHandler(DiscordSocketClient client, DatabaseManager database, CommandService commandService)
         {
             _client = client;
             _database = database;
             _commandService = commandService;
-			_webHooksManager = webHooksManager;
         }
 
         // Connects events and logs into discord
@@ -80,28 +77,10 @@ namespace Maina.Core
             Logger.LogVerbose($"Commands registered: {_commandService.Commands.Count()}.");
 
 
-			_webHooksManager.PayloadReceived += WebHookReceived;
-			_webHooksManager.SystemFailed += WebHookSystemFail;
-
         }
 
 
-		
-		private void WebHookSystemFail(object sender, WebHookFailEventArgs e)
-		{
-			Logger.LogError("Error in WebHook server: " + e.Exception.Message);
-			if (!e.IsServerStillRunning)
-				_webHooksManager.ResetServer();
-		}
 
-
-		//TODO Implement event responses to webhooks.
-		private void WebHookReceived(object sender, WebHookPayloadEventArgs e)
-		{
-			if (e.GitHubReleaseData != null) {
-
-			}
-		}
 
 		/// <summary>
 		/// Sends discord log messages to Reimu's logger
@@ -213,7 +192,7 @@ namespace Maina.Core
                 // TODO: Log commands for cooldown
                 return;
             }
-            
+
             switch (result.Error)
             {
                 case CommandError.UnknownCommand:
@@ -240,7 +219,7 @@ namespace Maina.Core
                     throw new ArgumentOutOfRangeException();
             }
         }
-        
+
         private async Task ReactionAddedAsync(Cacheable<IUserMessage, ulong> cacheable, ISocketMessageChannel channel,
             SocketReaction reaction)
         {

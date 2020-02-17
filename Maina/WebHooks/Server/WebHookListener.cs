@@ -17,7 +17,7 @@ namespace Maina.WebHooks.Server
 
 	public class WebHookListener : IDisposable
 	{
-		
+
 
 
 		private AutoResetEvent KeepWorking = new AutoResetEvent(false);
@@ -26,7 +26,7 @@ namespace Maina.WebHooks.Server
 
 		private HttpListener _listener = null;
 		private WebHookObserver _observer;
-		
+
 		public List<string> TrustedUserAgents {
 			get; private set;
 		} = new List<string>();
@@ -46,7 +46,7 @@ namespace Maina.WebHooks.Server
 			if (receiveTo == null) {
 				receiveTo = new string[2];
 				receiveTo[0] = "http://*:8080/webhooks/";
-				receiveTo[1] = "https://*:443/webhooks/";
+				//receiveTo[1] = "https://*:443/webhooks/"; //TODO figure out how to do SSL
 			}
 			_listener = new HttpListener();
 			foreach (string prefix in receiveTo)
@@ -65,7 +65,7 @@ namespace Maina.WebHooks.Server
 					ip = wc.DownloadString("http://ipinfo.io/ip");
 				ip = ip.TrimEnd();
 				string [] urls = new string [_listener.Prefixes.Count];
-				int i = 0; 
+				int i = 0;
 				foreach (string p in _listener.Prefixes) {
 					urls[i] = p.Replace("*", ip);
 					i++;
@@ -75,20 +75,20 @@ namespace Maina.WebHooks.Server
 			}
 			catch (Exception) {
 				return null;
-			}			
+			}
 		}
 
-		
-		
+
+
 		private bool _end = false;
 		/// <summary>
 		/// Starts the listening process.
 		/// <para>This call is blocking, it is recommended to use Task.Run or another threading mechanism to call this function.</para>
 		/// </summary>
 		public void StartListening () {
-			
+
 			_listener.Start();
-			try {				
+			try {
 				while (!_end) {
 
 					_listener.BeginGetContext(new AsyncCallback(RetrieveRequest), _listener);
@@ -140,13 +140,13 @@ namespace Maina.WebHooks.Server
 			HttpListenerContext context = listener.EndGetContext(ar);
 
 			try {
-				
+
 				HttpListenerRequest request = context.Request;
-				
+
 				if (request.HttpMethod != "POST") {
 					RespondWithError(405, context); //Method not allowed
 					return;
-				}					
+				}
 				if (request.UserAgent == null || TrustedUserAgents.Find(x => request.UserAgent.Contains(x)) == null) {
 					RespondWithError(401, context); //Unauthorized
 					return;
@@ -160,7 +160,7 @@ namespace Maina.WebHooks.Server
 				if (request.Headers.Get("X-GitHub-Event") != null)
 					release = request.Headers.Get("X-GitHub-Event") == ("release");
 
-					
+
 				using (StreamReader input = new StreamReader(request.InputStream, request.ContentEncoding ?? Encoding.UTF8)) {
 					payload = input.ReadToEnd();
 
@@ -180,14 +180,14 @@ namespace Maina.WebHooks.Server
 					output.Write(buff, 0, buff.Length);
 					output.Close();
 				}*/
-				
-					
+
+
 			}
 			catch(Exception e) {
 				answered = RespondWithError(500, context); //Internal Server Error
 				_observer?.OnWebHookRequestProcessFail(e);
 			}
-			
+
 
 			if (!answered){
 				try {
@@ -209,7 +209,7 @@ namespace Maina.WebHooks.Server
 
 
 
-		
+
 
 
 
@@ -227,10 +227,10 @@ namespace Maina.WebHooks.Server
 				_end = true;
 				KeepWorking.Set();
 				_listener?.Abort();
-				_listener = null;				
+				_listener = null;
 				KeepWorking.Dispose();
 				ListenerStopped.Dispose();
-				
+
 				// TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
 				// TODO: set large fields to null.
 
