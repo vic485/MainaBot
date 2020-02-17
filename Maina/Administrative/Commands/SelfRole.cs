@@ -1,31 +1,49 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Maina.Core;
 using Maina.Core.Logging;
+using Maina.Database.Models;
 
 namespace Maina.Administrative.Commands
 {
     [RequireBotPermission(GuildPermission.ManageRoles), RequireUserPermission(GuildPermission.ManageRoles)]
     public class SelfRole : MainaBase
     {
-        [Command("selfrole add")]
-        public Task SelfRoleAdd(string s, SocketRole role)
-        {
-            var emote = new Emoji(s);
+		
+		private IEmote GetEmote (string key) {
+			IEmote resEmote = null;
+			Emote emote = null;
+			if (Emote.TryParse(key, out emote))
+				resEmote = emote;
+			else
+				resEmote = new Emoji(key);
+			return resEmote;
+		}
 
-            if (Context.GuildConfig.SelfRoles.ContainsKey(emote.Name))
+        [Command("selfrole add")]
+        public async Task SelfRoleAdd(string s, SocketRole role)
+        {
+			IEmote emote = GetEmote(s);
+
+            if (Context.GuildConfig.SelfRoles.ContainsKey(emote.ToString()))
             {
-                Context.GuildConfig.SelfRoles[emote.Name] = role.Id;
-                return ReplyAsync($"Self role for {Emote.Parse(emote.Name)} changed to `{role.Name}`",
+                Context.GuildConfig.SelfRoles[emote.ToString()] = role.Id;
+				await SelfRoleUpdateAsync();
+                await ReplyAsync($"Self role for {Emote.Parse(emote.ToString())} changed to `{role.Name}`",
                     updateGuild: true);
             }
-
-            Context.GuildConfig.SelfRoles.Add(emote.Name, role.Id);
-            return ReplyAsync($"Added self role {role.Name} - {emote.Name}", updateGuild: true);
+			else {
+				Context.GuildConfig.SelfRoles.Add(emote.ToString(), role.Id);
+				await SelfRoleUpdateAsync();
+				await ReplyAsync($"Added self role {role.Name} - {emote.ToString()}", updateGuild: true);
+			}
+			
         }
 
         [Command("selfrole list")]
@@ -37,27 +55,31 @@ namespace Maina.Administrative.Commands
                 return;
             }
             
-            var embedBuilder = CreateEmbed(EmbedColor.Aqua);
+			if ((Context.Guild.GetChannel(Context.GuildConfig.SelfRoleMenu[0]) is SocketTextChannel channel &&
+                  await channel.GetMessageAsync(Context.GuildConfig.SelfRoleMenu[1]) is IUserMessage prevMessage))
+            {
+                await prevMessage.DeleteAsync();
+            }
 
-            var selfRoleList = Context.GuildConfig.SelfRoles.Aggregate(string.Empty,
-                (current, selfRole) =>
-                    current + $"{selfRole.Key} - {Context.Guild.GetRole(selfRole.Value).Mention}\n");
 
-            embedBuilder.AddField("**Self Roles**", selfRoleList);
-            var message = await ReplyAsync(string.Empty, embedBuilder.Build());
+            EmbedBuilder embedBuilder = CreateEmbed(EmbedColor.SalmonPink);
+
+			
+			StringBuilder sb = new StringBuilder();
+			foreach (string key in Context.GuildConfig.SelfRoles.Keys)
+				sb.AppendLine($"{key} - {Context.Guild.GetRole(Context.GuildConfig.SelfRoles[key]).Mention}\n");
+           
+
+            embedBuilder.AddField("**Self Roles**", sb.ToString());
+            IUserMessage message = await ReplyAsync(string.Empty, embedBuilder.Build());
 
 			
 
             foreach (var em in Context.GuildConfig.SelfRoles.Keys)
             {
 				try {
-					IEmote res = null;
-					Emote emote = null;
-					if (Emote.TryParse(em, out emote))
-						res = emote;
-					else
-						res = new Emoji(em);
-					await message.AddReactionAsync(res);
+					IEmote emote = GetEmote(em);
+					await message.AddReactionAsync(emote);
 				}
 				catch (Exception ex) {
 					Logger.LogException(ex);
@@ -67,43 +89,73 @@ namespace Maina.Administrative.Commands
             
             Context.GuildConfig.SelfRoleMenu = new[] {message.Channel.Id, message.Id};
             Context.Database.Save(Context.GuildConfig); // Save manually rather than sending another message
+			await Context.Message.DeleteAsync(); //It will look more clean if we delete the command message
         }
 
         [Command("selfrole remove")]
         public async Task SelfRoleRemoveAsync(string s)
         {
-            var emote = new Emoji(s);
+            IEmote emote = GetEmote(s);
 
-            if (!Context.GuildConfig.SelfRoles.ContainsKey(emote.Name))
+            if (!Context.GuildConfig.SelfRoles.ContainsKey(emote.ToString()))
             {
-                await ReplyAsync($"There is not a role assigned to {emote}");
+                await ReplyAsync($"There is not a role assigned to {emote.ToString()}");
                 return;
             }
 
-            Context.GuildConfig.SelfRoles.Remove(emote.Name);
-            await ReplyAsync($"Removed self role assigned to {emote.Name}", updateGuild: true);
+            Context.GuildConfig.SelfRoles.Remove(emote.ToString());
+			await SelfRoleUpdateAsync();
+            await ReplyAsync($"Removed self role assigned to {emote.ToString()}", updateGuild: true);
         }
+
+		private async Task<IUserMessage> GetSelfRoleMessage () {
+			if (!(Context.Guild.GetChannel(Context.GuildConfig.SelfRoleMenu[0]) is SocketTextChannel channel &&
+                  await channel.GetMessageAsync(Context.GuildConfig.SelfRoleMenu[1]) is IUserMessage message))
+            {
+                return null;
+            }
+			return message;
+		}
+
+		private async Task UpdateSelfRoleMessage (IUserMessage message) {
+			EmbedBuilder embedBuilder = CreateEmbed(EmbedColor.SalmonPink);
+
+            StringBuilder sb = new StringBuilder();
+			List<IEmote> reactions = new List<IEmote>();
+			foreach (string key in Context.GuildConfig.SelfRoles.Keys) {
+				sb.AppendLine($"{key} - {Context.Guild.GetRole(Context.GuildConfig.SelfRoles[key]).Mention}\n");
+				reactions.Add(GetEmote(key));
+			}
+            embedBuilder.AddField("**Self Roles**", sb.ToString());
+            await message.ModifyAsync(x => x.Embed = embedBuilder.Build());
+
+			//Get the difference set of the message reactions set minus the final reactions set
+			List<IEmote> toDelete = new List<IEmote>(message.Reactions.Keys.Except<IEmote>(reactions));
+			foreach (IEmote emote in toDelete) {
+				await DiscordAPIHelper.DeleteAllReactionsWithEmote(message, emote); //Making this was :CoconaSweat:
+			}
+			
+			//Get the difference set of the final reactions set minus the message reactions set
+			List<IEmote> toAdd = new List<IEmote>(reactions.Except<IEmote>(message.Reactions.Keys));
+			await message.AddReactionsAsync(toAdd.ToArray());
+
+			//Just because of pride, if the Discord API improves in the future, leave this shit here.
+			
+
+		}
 
         // TODO: Maybe automatically do this when adding/removing a self role?
         [Command("selfrole update")]
         public async Task SelfRoleUpdateAsync()
         {
-            if (!(Context.Guild.GetChannel(Context.GuildConfig.SelfRoleMenu[0]) is SocketTextChannel channel &&
-                  await channel.GetMessageAsync(Context.GuildConfig.SelfRoleMenu[1]) is IUserMessage message))
+			IUserMessage message = await GetSelfRoleMessage();
+            if (message == null)
             {
                 await ReplyAsync("Could not find self role message. Perhaps try re-posting it?");
                 return;
             }
-
-            var embedBuilder = CreateEmbed(EmbedColor.Aqua);
-
-            var selfRoleList = Context.GuildConfig.SelfRoles.Aggregate(string.Empty,
-                (current, selfRole) =>
-                    current + $"{selfRole.Key} - {Context.Guild.GetRole(selfRole.Value).Mention}\n");
-
-            embedBuilder.AddField("**Self Roles**", selfRoleList);
-
-            await message.ModifyAsync(x => x.Embed = embedBuilder.Build());
+			await UpdateSelfRoleMessage(message);
+            
         }
     }
 }

@@ -8,6 +8,8 @@ using Maina.Database;
 using Discord.WebSocket;
 using Maina.Core;
 using Maina.Database.Models;
+using Maina.Administrative;
+using System.Collections.Generic;
 
 namespace Maina.WebHooks
 {
@@ -36,16 +38,17 @@ namespace Maina.WebHooks
 		{
 
 			EmbedBuilder eb = null;
-
+			List<string> tags = new List<string>();
 			if (type == PayloadType.GitHubRelease) {
 				try {
 					GitHubWebHookData ghdata = JsonConvert.DeserializeObject<GitHubWebHookData>(payload);
-					eb = new EmbedBuilder { Color = new Color((uint) EmbedColor.Aqua) };
+					eb = new EmbedBuilder { Color = new Color((uint) EmbedColor.SalmonPink) };
 					eb.WithAuthor("I've heard some great news!");
 					eb.WithThumbnailUrl("https://cdn.discordapp.com/attachments/677950856921874474/678657998637236266/Miharu_Bot_Final.png");
 					eb.WithTitle(ghdata.release.name);
 					eb.WithUrl(ghdata.release.html_url);
 					eb.WithDescription("There is a new version of Miharu Available!");
+					tags.Add("Miharu");
 				}
 				catch (Exception e) {
 					Logger.LogError("Error parsing GitHub release payload: " + e.Message);
@@ -56,19 +59,8 @@ namespace Maina.WebHooks
 				eb.WithAuthor("I've heard some great news!");
 				eb.WithTitle(payload);
 			}
-
-			if (eb != null) {
-				foreach (GuildConfig gc in _dataBaseManager.GetAllGuilds()) {
-					try {
-						SocketGuild guild = _discordSocketClient.GetGuild(gc.NumberId);
-						if (gc.NewsChannel.HasValue) {
-							SocketTextChannel channel = guild.GetTextChannel(gc.NewsChannel.Value);
-							channel.SendMessageAsync(string.Empty, false, eb.Build());
-						}
-					}
-					catch (Exception){ }
-				}
-			}
+			
+			DiscordAPIHelper.PublishNews(eb, tags.ToArray(),_dataBaseManager, _discordSocketClient);
 
 		}
 

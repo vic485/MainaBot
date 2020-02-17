@@ -233,10 +233,10 @@ namespace Maina.Core
             if (message.Id != config.SelfRoleMenu[1])
                 return;
 
-            if (!config.SelfRoles.ContainsKey(reaction.Emote.Name))
+            if (!config.SelfRoles.ContainsKey(reaction.Emote.ToString()))
                 return;
 
-            var role = guild.GetRole(config.SelfRoles[reaction.Emote.Name]);
+            var role = guild.GetRole(config.SelfRoles[reaction.Emote.ToString()]);
             await user.AddRoleAsync(role);
             //await (await user.GetOrCreateDMChannelAsync()).SendMessageAsync($"You have received the role {role.Name}");
         }
@@ -254,10 +254,10 @@ namespace Maina.Core
             if (message.Id != config.SelfRoleMenu[1])
                 return;
 
-            if (!config.SelfRoles.ContainsKey(reaction.Emote.Name))
+            if (!config.SelfRoles.ContainsKey(reaction.Emote.ToString()))
                 return;
 
-            var role = guild.GetRole(config.SelfRoles[reaction.Emote.Name]);
+            var role = guild.GetRole(config.SelfRoles[reaction.Emote.ToString()]);
 
             if (!user.Roles.Contains(role))
                 return;

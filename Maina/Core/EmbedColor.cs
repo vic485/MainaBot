@@ -4,7 +4,7 @@
 	// TODO: Idol Budoukan colors
 	public enum EmbedColor
 	{
-		Aqua = 0x8AF7FC,    // Part of Tenshi's dress
+		SalmonPink = 0xFDA99E,    // Maina's salmon pink.
 		Green = 0x006D38,   // Sanae's eyes
 		Purple = 0xAC82DC,  // Reisen's hair
 		Red = 0xFF462C,    // Reimu's outfit

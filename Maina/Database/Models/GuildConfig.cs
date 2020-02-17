@@ -17,6 +17,9 @@ namespace Maina.Database.Models
         public ulong[] SelfRoleMenu { get; set; } = new ulong[2];
         public Dictionary<string, ulong> SelfRoles { get; set; } = new Dictionary<string, ulong>();
 
+		public Dictionary<string, ulong> NewsRoles {get; set; } = new Dictionary<string, ulong>();
+		public ulong? AllNewsRole { get; set; }
+
 		public ulong? NewsChannel { get; set; }
     }
 }
