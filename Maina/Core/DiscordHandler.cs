@@ -51,8 +51,8 @@ namespace Maina.Core
             //_client.MessageDeleted
             _client.MessageReceived += MessageReceivedAsync;
             //_client.MessageUpdated
-            //_client.ReactionAdded
-            //_client.ReactionRemoved
+            _client.ReactionAdded += ReactionAddedAsync;
+            _client.ReactionRemoved += ReactionRemovedAsync;
             //_client.ReactionsCleared
             //_client.RecipientAdded
             //_client.RecipientRemoved
@@ -239,6 +239,52 @@ namespace Maina.Core
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+        }
+        
+        private async Task ReactionAddedAsync(Cacheable<IUserMessage, ulong> cacheable, ISocketMessageChannel channel,
+            SocketReaction reaction)
+        {
+            var message = await cacheable.GetOrDownloadAsync();
+            if (!(reaction.Channel is SocketGuildChannel guildChannel && reaction.User.Value is SocketGuildUser user))
+                return;
+
+            var guild = guildChannel.Guild;
+            var config = _database.Get<GuildConfig>($"guild-{guild.Id}");
+
+            if (message.Id != config.SelfRoleMenu[1])
+                return;
+
+            if (!config.SelfRoles.ContainsKey(reaction.Emote.Name))
+                return;
+
+            var role = guild.GetRole(config.SelfRoles[reaction.Emote.Name]);
+            await user.AddRoleAsync(role);
+            //await (await user.GetOrCreateDMChannelAsync()).SendMessageAsync($"You have received the role {role.Name}");
+        }
+
+        private async Task ReactionRemovedAsync(Cacheable<IUserMessage, ulong> cacheable, ISocketMessageChannel channel,
+            SocketReaction reaction)
+        {
+            var message = await cacheable.GetOrDownloadAsync();
+            if (!(reaction.Channel is SocketGuildChannel guildChannel && reaction.User.Value is SocketGuildUser user))
+                return;
+
+            var guild = guildChannel.Guild;
+            var config = _database.Get<GuildConfig>($"guild-{guild.Id}");
+
+            if (message.Id != config.SelfRoleMenu[1])
+                return;
+
+            if (!config.SelfRoles.ContainsKey(reaction.Emote.Name))
+                return;
+
+            var role = guild.GetRole(config.SelfRoles[reaction.Emote.Name]);
+
+            if (!user.Roles.Contains(role))
+                return;
+
+            await user.RemoveRoleAsync(role);
+            //await (await user.GetOrCreateDMChannelAsync()).SendMessageAsync($"Removed role {role.Name}");
         }
 
         #endregion
