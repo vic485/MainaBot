@@ -121,33 +121,34 @@ namespace Maina.Administrative.Commands
 		}
 
 		private async Task UpdateSelfRoleMessage (IUserMessage message) {
-			EmbedBuilder embedBuilder = CreateEmbed(EmbedColor.SalmonPink);
+			if (message != null) {
+				EmbedBuilder embedBuilder = CreateEmbed(EmbedColor.SalmonPink);
 
-            StringBuilder sb = new StringBuilder();
-			List<IEmote> reactions = new List<IEmote>();
-			foreach (string key in Context.GuildConfig.SelfRoles.Keys) {
-				sb.AppendLine($"{key} - {Context.Guild.GetRole(Context.GuildConfig.SelfRoles[key]).Mention}\n");
-				reactions.Add(GetEmote(key));
-			}
-			if (Context.GuildConfig.SelfRoles.Keys.Count > 0)
-				embedBuilder.AddField("**Self Roles**", sb.ToString());
-			else
-				embedBuilder.AddField("**There are no Self Roles**", "ごめんなさい");
+				StringBuilder sb = new StringBuilder();
+				List<IEmote> reactions = new List<IEmote>();
+				foreach (string key in Context.GuildConfig.SelfRoles.Keys) {
+					sb.AppendLine($"{key} - {Context.Guild.GetRole(Context.GuildConfig.SelfRoles[key]).Mention}\n");
+					reactions.Add(GetEmote(key));
+				}
+				if (Context.GuildConfig.SelfRoles.Keys.Count > 0)
+					embedBuilder.AddField("**Self Roles**", sb.ToString());
+				else
+					embedBuilder.AddField("**There are no Self Roles**", "ごめんなさい");
 
-            await message.ModifyAsync(x => x.Embed = embedBuilder.Build());
+				await message.ModifyAsync(x => x.Embed = embedBuilder.Build());
 
-			//Get the difference set of the message reactions set minus the final reactions set
-			List<IEmote> toDelete = new List<IEmote>(message.Reactions.Keys.Except<IEmote>(reactions));
-			foreach (IEmote emote in toDelete) {
-				await DiscordAPIHelper.DeleteAllReactionsWithEmote(message, emote); //Making this was :CoconaSweat:
-			}
+				//Get the difference set of the message reactions set minus the final reactions set
+				List<IEmote> toDelete = new List<IEmote>(message.Reactions.Keys.Except<IEmote>(reactions));
+				foreach (IEmote emote in toDelete) {
+					await DiscordAPIHelper.DeleteAllReactionsWithEmote(message, emote); //Making this was :CoconaSweat:
+				}
 			
-			//Get the difference set of the final reactions set minus the message reactions set
-			List<IEmote> toAdd = new List<IEmote>(reactions.Except<IEmote>(message.Reactions.Keys));
-			await message.AddReactionsAsync(toAdd.ToArray());
+				//Get the difference set of the final reactions set minus the message reactions set
+				List<IEmote> toAdd = new List<IEmote>(reactions.Except<IEmote>(message.Reactions.Keys));
+				await message.AddReactionsAsync(toAdd.ToArray());
 
-			//Just because of pride, if the Discord API improves in the future, leave this shit here.
-			
+				//Just because of pride, if the Discord API improves in the future, leave this shit here.
+			}		
 
 		}
 
