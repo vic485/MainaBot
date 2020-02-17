@@ -21,5 +21,7 @@ namespace Maina.Database.Models
 		public ulong? AllNewsRole { get; set; }
 
 		public ulong? NewsChannel { get; set; }
+		public ulong WelcomeChannel { get; set; }
+		public string WelcomeMessage { get; set; }
     }
 }
