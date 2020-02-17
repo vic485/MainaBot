@@ -1,9 +1,11 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Maina.Core;
+using Maina.Core.Logging;
 
 namespace Maina.Administrative.Commands
 {
@@ -44,9 +46,23 @@ namespace Maina.Administrative.Commands
             embedBuilder.AddField("**Self Roles**", selfRoleList);
             var message = await ReplyAsync(string.Empty, embedBuilder.Build());
 
-            foreach (var emote in Context.GuildConfig.SelfRoles.Keys)
+			
+
+            foreach (var em in Context.GuildConfig.SelfRoles.Keys)
             {
-                await message.AddReactionAsync(new Emoji(emote));
+				try {
+					IEmote res = null;
+					Emote emote = null;
+					if (Emote.TryParse(em, out emote))
+						res = emote;
+					else
+						res = new Emoji(em);
+					await message.AddReactionAsync(res);
+				}
+				catch (Exception ex) {
+					Logger.LogException(ex);
+					throw ex;
+				}
             }
             
             Context.GuildConfig.SelfRoleMenu = new[] {message.Channel.Id, message.Id};
