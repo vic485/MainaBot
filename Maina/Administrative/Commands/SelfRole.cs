@@ -34,13 +34,15 @@ namespace Maina.Administrative.Commands
             if (Context.GuildConfig.SelfRoles.ContainsKey(emote.ToString()))
             {
                 Context.GuildConfig.SelfRoles[emote.ToString()] = role.Id;
-				await SelfRoleUpdateAsync();
+				IUserMessage srm = await GetSelfRoleMessage();
+				await UpdateSelfRoleMessage(srm);
                 await ReplyAsync($"Self role for {Emote.Parse(emote.ToString())} changed to `{role.Name}`",
                     updateGuild: true);
             }
 			else {
 				Context.GuildConfig.SelfRoles.Add(emote.ToString(), role.Id);
-				await SelfRoleUpdateAsync();
+				IUserMessage srm = await GetSelfRoleMessage();
+				await UpdateSelfRoleMessage(srm);
 				await ReplyAsync($"Added self role {role.Name} - {emote.ToString()}", updateGuild: true);
 			}
 			
@@ -104,7 +106,8 @@ namespace Maina.Administrative.Commands
             }
 
             Context.GuildConfig.SelfRoles.Remove(emote.ToString());
-			await SelfRoleUpdateAsync();
+			IUserMessage srm = await GetSelfRoleMessage();
+			await UpdateSelfRoleMessage(srm);
             await ReplyAsync($"Removed self role assigned to {emote.ToString()}", updateGuild: true);
         }
 
@@ -126,7 +129,11 @@ namespace Maina.Administrative.Commands
 				sb.AppendLine($"{key} - {Context.Guild.GetRole(Context.GuildConfig.SelfRoles[key]).Mention}\n");
 				reactions.Add(GetEmote(key));
 			}
-            embedBuilder.AddField("**Self Roles**", sb.ToString());
+			if (Context.GuildConfig.SelfRoles.Keys.Count > 0)
+				embedBuilder.AddField("**Self Roles**", sb.ToString());
+			else
+				embedBuilder.AddField("**There are no Self Roles**", "ごめんなさい");
+
             await message.ModifyAsync(x => x.Embed = embedBuilder.Build());
 
 			//Get the difference set of the message reactions set minus the final reactions set

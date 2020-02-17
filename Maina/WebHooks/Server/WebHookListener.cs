@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Net.Http;
 using System.Text;
 using System.Threading;
 
@@ -12,6 +11,7 @@ namespace Maina.WebHooks.Server
 
 	public enum PayloadType {
 		GitHubRelease,
+		DiscordEmbed,
 		Unknown
 	}
 
@@ -133,6 +133,7 @@ namespace Maina.WebHooks.Server
 		{
 			KeepWorking.Set();
 
+			PayloadType payloadType = PayloadType.Unknown;
 			bool release = false;
 			string payload = null;
 			bool answered = false;
@@ -157,8 +158,11 @@ namespace Maina.WebHooks.Server
 				}
 
 
-				if (request.Headers.Get("X-GitHub-Event") != null)
-					release = request.Headers.Get("X-GitHub-Event") == ("release");
+				if (request.Headers.Get("X-GitHub-Event") != null && request.Headers.Get("X-GitHub-Event") == "release")
+					payloadType = PayloadType.GitHubRelease;
+				else if ((request.ContentType ?? "").Contains("application/json") && (request.Headers.Get("Payload-Object") ?? "") == "Discord-Embed")
+					payloadType = PayloadType.DiscordEmbed;
+
 
 
 				using (StreamReader input = new StreamReader(request.InputStream, request.ContentEncoding ?? Encoding.UTF8)) {
@@ -200,10 +204,7 @@ namespace Maina.WebHooks.Server
 
 
 			if (payload != null) {
-				if (release)
-					_observer?.OnPayloadReceived(PayloadType.GitHubRelease, payload);
-				else
-					_observer?.OnPayloadReceived(PayloadType.Unknown, payload);
+				_observer?.OnPayloadReceived(payloadType, payload);
 			}
 		}
 

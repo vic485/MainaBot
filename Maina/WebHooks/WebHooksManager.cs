@@ -33,34 +33,75 @@ namespace Maina.WebHooks
 		}
 
 
+		private EmbedBuilder GithubPayloadToEmbedBuilder (string payload) {
+			EmbedBuilder eb = null;
+			GitHubWebHookData ghdata = JsonConvert.DeserializeObject<GitHubWebHookData>(payload);
+			eb = new EmbedBuilder { Color = new Color((uint) EmbedColor.SalmonPink) };
+			eb.WithAuthor("I've heard some great news!");
+			eb.WithThumbnailUrl("https://cdn.discordapp.com/attachments/677950856921874474/678657998637236266/Miharu_Bot_Final.png");
+			eb.WithTitle(ghdata.release.name);
+			eb.WithUrl(ghdata.release.html_url);
+			eb.WithDescription("There is a new version of Miharu Available!");
+			return eb;
+		}
 		
+		private Tuple<EmbedBuilder, string []> JsonToEmbedBuilder (string payload) {
+			EmbedBuilder eb = null;
+			EmbedData edata = JsonConvert.DeserializeObject<EmbedData>(payload);
+			eb = new EmbedBuilder { Color = new Color(edata.Color ?? (uint)EmbedColor.SalmonPink) };
+			eb.Title = edata.Title;
+			eb.Description = edata.Description;
+			eb.Url = edata.URL;
+			eb.ImageUrl = edata.IconURL;
+			if (edata.Author != null && edata.Author != "") eb.WithAuthor(edata.Author, edata.AuthorIconURL, edata.AuthorURL);
+			if (edata.Fields != null) {
+				foreach (EmbedFieldData efdata in edata.Fields) {
+					if ((efdata.Name ?? "") != "" && (efdata.Value ?? "") != "")
+						eb.AddField(efdata.Name, efdata.Value, efdata.Inline);
+				}
+			}
+			if ((edata.Footer ?? "") != "") eb.WithFooter(edata.Footer, edata.FooterIcon);
+
+
+			return new Tuple<EmbedBuilder, string[]>(eb, edata.Tags);
+		}
+
 		public void OnPayloadReceived(PayloadType type, string payload)
 		{
-
-			EmbedBuilder eb = null;
-			List<string> tags = new List<string>();
-			if (type == PayloadType.GitHubRelease) {
-				try {
-					GitHubWebHookData ghdata = JsonConvert.DeserializeObject<GitHubWebHookData>(payload);
-					eb = new EmbedBuilder { Color = new Color((uint) EmbedColor.SalmonPink) };
+			try {
+				EmbedBuilder eb = null;
+				List<string> tags = new List<string>();
+				if (type == PayloadType.GitHubRelease) {
+					try {
+						eb = GithubPayloadToEmbedBuilder(payload); 
+						tags.Add("Miharu");
+					}
+					catch (Exception e) {
+						Logger.LogError("Error parsing GitHub release payload: " + e.Message);
+					}
+				}
+				else if (type == PayloadType.DiscordEmbed) {
+					try {
+						Tuple<EmbedBuilder, string []> result = JsonToEmbedBuilder(payload);
+						eb = result.Item1;
+						foreach (string tag in result.Item2)
+							tags.Add(tag);
+					}
+					catch (Exception e) {
+						Logger.LogError("Error parsing Json Embed payload: " + e.Message);
+					}
+				}
+				else {
+					eb = new EmbedBuilder {Color = new Color((uint) EmbedColor.Green) };
 					eb.WithAuthor("I've heard some great news!");
-					eb.WithThumbnailUrl("https://cdn.discordapp.com/attachments/677950856921874474/678657998637236266/Miharu_Bot_Final.png");
-					eb.WithTitle(ghdata.release.name);
-					eb.WithUrl(ghdata.release.html_url);
-					eb.WithDescription("There is a new version of Miharu Available!");
-					tags.Add("Miharu");
+					eb.WithTitle(payload);
 				}
-				catch (Exception e) {
-					Logger.LogError("Error parsing GitHub release payload: " + e.Message);
-				}
-			}
-			else {
-				eb = new EmbedBuilder {Color = new Color((uint) EmbedColor.Green) };
-				eb.WithAuthor("I've heard some great news!");
-				eb.WithTitle(payload);
-			}
 			
-			DiscordAPIHelper.PublishNews(eb, tags.ToArray(),_dataBaseManager, _discordSocketClient);
+				DiscordAPIHelper.PublishNews(eb, tags.ToArray(),_dataBaseManager, _discordSocketClient);
+			}
+			catch(Exception e) {
+				Logger.LogError("Failed to process webhook payload." + e.Message);
+			}
 
 		}
 

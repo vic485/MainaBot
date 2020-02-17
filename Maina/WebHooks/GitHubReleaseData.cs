@@ -15,4 +15,6 @@ namespace Maina.WebHooks
 		public string action;
 		public GithubReleaseData release;
 	}
+
+
 }
