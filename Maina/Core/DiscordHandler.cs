@@ -57,7 +57,7 @@ namespace Maina.Core
             //_client.RoleDeleted
             //_client.RoleUpdated
             //_client.UserBanned
-            //_client.UserJoined += UserJoinedAsync;
+            _client.UserJoined += UserJoinedAsync;
             //_client.UserLeft
             //_client.UserUnbanned
             //_client.UserUpdated
@@ -75,8 +75,6 @@ namespace Maina.Core
             _serviceProvider = services;
             await _commandService.AddModulesAsync(Assembly.GetEntryAssembly(), services);
             Logger.LogVerbose($"Commands registered: {_commandService.Commands.Count()}.");
-
-
         }
 
 
@@ -171,6 +169,17 @@ namespace Maina.Core
         }
 
         #endregion
+
+        private async Task UserJoinedAsync(SocketGuildUser user)
+        {
+            var config = _database.Get<GuildConfig>($"guild-{user.Guild.Id}");
+            var channel = user.Guild.GetTextChannel(config.WelcomeChannel);
+            
+            if (channel == null || string.IsNullOrWhiteSpace(config.WelcomeMessage))
+                return;
+
+            await channel.SendMessageAsync(config.WelcomeMessage.Replace("{user}", user.Mention));
+        }
 
         #region Messages
 
