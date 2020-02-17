@@ -31,40 +31,7 @@ namespace Maina.WebHooks
 		}
 
 
-		private string [] _trustedUserAgents;
-		/// <summary>
-		/// Starts listening and logs the addresses it's listening to.
-		/// </summary>
-		/// <param name="receiveTo">The addresses to listen to.</param>
-		public void Initialize (string [] receiveTo = null, string [] trustedUserAgents = null) {
-			_listener = new WebHookListener(this, receiveTo);
-			_trustedUserAgents = trustedUserAgents;
-			if (_trustedUserAgents != null)
-				_listener.TrustedUserAgents.AddRange(_trustedUserAgents);
-
-			Task.Run(() => {
-				try {
-					_listener.StartListening();
-				}
-				catch (Exception) {
-					Logger.LogError("Could not start HTTP server. Is the bot running with privileges?");
-				}
-			});
-
-
-			string [] whURLs = _listener.GetWebHookURLs();
-			if (whURLs != null) {
-				string urls = "";
-				foreach (string url in whURLs)
-					urls += Environment.NewLine + "\t" + url;
-				Logger.LogForce("WebHook Server Listening for HTTP requests on:" + urls);
-			}
-			else
-				Logger.LogForce("Could not retrieve public WebHook URLs.");
-		}
-
-
-
+		
 		public void OnPayloadReceived(PayloadType type, string payload)
 		{
 
@@ -164,7 +131,7 @@ namespace Maina.WebHooks
 			if (whURLs != null) {
 				string urls = "";
 				foreach (string url in whURLs)
-					urls += Environment.NewLine + url;
+					urls += Environment.NewLine + "    " + url;
 				Logger.LogInfo("WebHook Server Listening for HTTP requests on:" + urls);
 			}
 			else

@@ -44,7 +44,7 @@ namespace Maina.WebHooks.Server
 
 
 			if (receiveTo == null) {
-				receiveTo = new string[2];
+				receiveTo = new string[1];
 				receiveTo[0] = "http://*:8080/webhooks/";
 				//receiveTo[1] = "https://*:443/webhooks/"; //TODO figure out how to do SSL
 			}
