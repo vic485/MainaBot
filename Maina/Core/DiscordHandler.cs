@@ -263,10 +263,17 @@ namespace Maina.Core
             if (message.Id != config.SelfRoleMenu[1])
                 return;
 
-            if (!config.SelfRoles.ContainsKey(reaction.Emote.ToString()))
-                return;
+			
+			string final = reaction.Emote.ToString();
+			if (!config.SelfRoles.ContainsKey(final)) {
+				int index = final.IndexOf("<") + 1;
+				if (index != -1)
+					final= final.Insert(index, "a");
+				if (!config.SelfRoles.ContainsKey(final))
+					return;
+			}
 
-            var role = guild.GetRole(config.SelfRoles[reaction.Emote.ToString()]);
+			var role = guild.GetRole(config.SelfRoles[final]);
 
             if (!user.Roles.Contains(role))
                 return;
