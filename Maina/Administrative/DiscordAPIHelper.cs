@@ -24,7 +24,7 @@ namespace Maina.Administrative
 			}
 		}
 
-		public static async Task PublishNews (EmbedBuilder payload,  string [] tags, DatabaseManager databaseManager, DiscordSocketClient discordSocketClient) {
+		public static async Task PublishNews (EmbedBuilder payload, DatabaseManager databaseManager, DiscordSocketClient discordSocketClient, params string [] tags) {
 			if (payload != null) {
 				foreach (GuildConfig gc in databaseManager.GetAllGuilds()) {
 					try {
@@ -47,7 +47,7 @@ namespace Maina.Administrative
 							
 						
 							SocketTextChannel channel = guild.GetTextChannel(gc.NewsChannel.Value);
-							channel.SendMessageAsync(pings.ToString(), false, payload.Build());
+							_ = channel.SendMessageAsync(pings.ToString(), false, payload.Build());
 						}
 					}
 					catch (Exception){ }

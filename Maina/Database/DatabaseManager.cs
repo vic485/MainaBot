@@ -57,29 +57,20 @@ namespace Maina.Database
                 return session.Load<T>(id); // Will return null if non-existent
         }
 
-		public GuildConfig[] GetAllGuilds ()
-        {
-            Logger.LogVerbose($"Retrieving all {typeof(GuildConfig).Name} from database.");
-            using (var session = Store.OpenSession())
-				return session.Advanced.LoadStartingWith<GuildConfig>("guild-");
-        }
+		/// <summary>
+		/// Gets all items of a type from the DB by filtered by and id prefix.
+		/// </summary>
+		/// <typeparam name="T">The type of items to retrieve.</typeparam>
+		/// <param name="prefix">The prefix an item id mus have to be included in the collection.</param>
+		/// <returns>An array with all items of type T.</returns>
+		public T[] GetAll<T> (string prefix)
+		{
+			Logger.LogVerbose($"Retrieving all {typeof(T).Name} from database.");
+			using (var session = Store.OpenSession())
+				return session.Advanced.LoadStartingWith<T>(prefix);
+		}
 
-        public void AddGuild(ulong id, string name)
-        {
-            using (var session = Store.OpenSession())
-            {
-                if (session.Advanced.Exists($"guild-{id}"))
-                    return;
-
-                Save(new GuildConfig
-                {
-                    Id = $"guild-{id}",
-                    Prefix = Get<BotConfig>("Config").Prefix
-                });
-
-                Logger.LogInfo($"Added config for {name} ({id}).");
-            }
-        }
+		
 
         /// <summary>
         /// Save an item or its changes to the database
@@ -98,6 +89,54 @@ namespace Maina.Database
             }
         }
 
+		/// <summary>
+		/// Removes an item from the Database.
+		/// </summary>
+		/// <param name="item">The item to remove (only requires Id)</param>
+		/// <typeparam name="T">Type deriving from <see cref="DatabaseItem"/></typeparam>
+		public void Remove<T> (T item) where T : DatabaseItem{
+			using (var session = Store.OpenSession())
+            {
+                session.Delete(item.Id);
+				session.SaveChanges();
+                Logger.LogInfo($"Removed {typeof(T).Name} from DB ({item.Id}).");
+            }
+		}
+
+		public bool Exists<T> (T item) where T : DatabaseItem {
+			using (var session = Store.OpenSession())
+            {
+                return session.Advanced.Exists(item.Id);
+                
+            }
+		}
+
+
+
+		#region Guilds
+		public GuildConfig[] GetAllGuilds ()
+        {
+			return GetAll<GuildConfig>("guild-");
+        }
+
+		public void AddGuild(ulong id, string name)
+        {
+            using (var session = Store.OpenSession())
+            {
+                if (session.Advanced.Exists($"guild-{id}"))
+                    return;
+
+                Save(new GuildConfig
+                {
+                    Id = $"guild-{id}",
+                    Prefix = Get<BotConfig>("Config").Prefix
+                });
+
+                Logger.LogInfo($"Added config for {name} ({id}).");
+            }
+        }
+
+
         /// <summary>
         /// Removes a guild from the database
         /// </summary>
@@ -108,11 +147,14 @@ namespace Maina.Database
             using (var session = Store.OpenSession())
             {
                 session.Delete($"guild-{id}");
+				session.SaveChanges();
                 Logger.LogInfo($"Removed config for {name} ({id}).");
             }
         }
 
-        public void Dispose()
+		#endregion
+
+		public void Dispose()
         {
             Store.Dispose();
         }

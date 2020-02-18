@@ -10,6 +10,7 @@ using Maina.Core;
 using Maina.Administrative;
 using System.Collections.Generic;
 using Maina.WebHooks.Data;
+using Maina.Database.Models;
 
 namespace Maina.WebHooks
 {
@@ -66,6 +67,43 @@ namespace Maina.WebHooks
 			return new Tuple<EmbedBuilder, string[]>(eb, edata.Tags);
 		}
 
+		private void ProcessRSSFeedPayload (string payload) {
+			RSSFeedData rssFeedData = JsonConvert.DeserializeObject<RSSFeedData>(payload);
+			if (rssFeedData.Action == "Add") {
+				if (_dataBaseManager.Get<RSSFeed>(rssFeedData.Id) == null) {
+					_dataBaseManager.Save<RSSFeed>(new RSSFeed { 
+						Id = rssFeedData.Id,
+						Tag = rssFeedData.Tag,
+					});
+					Logger.LogInfo($"A new RSSFeed was added through webhooks ({rssFeedData.Id})");
+				}
+				else
+					throw new Exception($"WebHook attempted to Add RSSFeed that already exists ({rssFeedData.Id}).");
+			}
+			else if (rssFeedData.Action == "Remove") {
+				if (_dataBaseManager.Get<RSSFeed>(rssFeedData.Id) != null) {
+					_dataBaseManager.Remove<RSSFeed>(new RSSFeed { Id = rssFeedData.Id });
+					Logger.LogInfo($"A RSSFeed was removed through webhooks ({rssFeedData.Id})");
+				}
+				else
+					throw new Exception($"WebHook attempted to Remove RSSFeed that does not exist ({rssFeedData.Id}).");
+			}
+			else if (rssFeedData.Action == "Modify") {
+				if (_dataBaseManager.Get<RSSFeed>(rssFeedData.Id) != null) {
+					_dataBaseManager.Save<RSSFeed>(new RSSFeed { 
+						Id = rssFeedData.Id,
+						Tag = rssFeedData.Tag,
+						LastUpdateId = rssFeedData.LastUpdateId,
+					});
+					Logger.LogInfo($"A RSSFeed was modified through webhooks ({rssFeedData.Id})");
+				}
+				else
+					throw new Exception($"WebHook attempted to Modify RSSFeed that does not exist ({rssFeedData.Id}).");
+			}
+			else
+				throw new Exception("Unknown Action: " + rssFeedData.Action);
+		}
+
 		public void OnPayloadReceived(PayloadType type, string payload)
 		{
 			try {
@@ -91,13 +129,21 @@ namespace Maina.WebHooks
 						Logger.LogError("Error parsing Json Embed payload: " + e.Message);
 					}
 				}
-				else {
-					eb = new EmbedBuilder {Color = new Color((uint) EmbedColor.Green) };
-					eb.WithAuthor("I've heard some great news!");
-					eb.WithTitle(payload);
+				else if (type == PayloadType.RSSFeed) {
+					try {
+						eb = null;
+						ProcessRSSFeedPayload(payload);
+					}
+					catch(Exception e) {
+						Logger.LogError ("Error processing RSSFeed payload: " + e.Message);
+					}
 				}
-			
-				DiscordAPIHelper.PublishNews(eb, tags.ToArray(),_dataBaseManager, _discordSocketClient);
+				else {
+					eb = null;
+					Logger.LogWarning("Received unknown payload:\n" + payload);
+				}
+				if (eb != null)
+					_ = DiscordAPIHelper.PublishNews(eb, _dataBaseManager, _discordSocketClient, tags.ToArray());
 			}
 			catch(Exception e) {
 				Logger.LogError("Failed to process webhook payload." + e.Message);
