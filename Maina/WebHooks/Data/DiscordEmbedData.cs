@@ -1,6 +1,6 @@
 ﻿
 
-namespace Maina.WebHooks
+namespace Maina.WebHooks.Data
 {
 	
 

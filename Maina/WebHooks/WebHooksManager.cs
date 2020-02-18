@@ -7,9 +7,9 @@ using Discord;
 using Maina.Database;
 using Discord.WebSocket;
 using Maina.Core;
-using Maina.Database.Models;
 using Maina.Administrative;
 using System.Collections.Generic;
+using Maina.WebHooks.Data;
 
 namespace Maina.WebHooks
 {
