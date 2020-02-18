@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Maina.Database.Models;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -26,7 +27,7 @@ namespace Maina.WebHooks.Server
 		private ManualResetEvent ListenerStopped = new ManualResetEvent(false);
 
 		private HttpListener _listener = null;
-		private WebHookObserver _observer;
+		private WebHookIntermediary _observer;
 
 		public List<string> TrustedUserAgents {
 			get; private set;
@@ -40,14 +41,15 @@ namespace Maina.WebHooks.Server
 		/// <param name="observer">The object with the callback methods.</param>
 		/// <param name="receiveTo">An array with the prefixes for which to accept requests.
 		/// <para>If null default prefixes are "http://*:8080/webhooks/" and "https://*:443/webhooks/"</para></param>
-		public WebHookListener (WebHookObserver observer, string [] receiveTo = null) {
+		public WebHookListener (WebHookIntermediary observer, string [] receiveTo = null) {
 			TrustedUserAgents.Add("GitHub-Hookshot");
 
 
 			if (receiveTo == null) {
-				receiveTo = new string[1];
+				receiveTo = new string[2];
 				receiveTo[0] = "http://*:8080/webhooks/";
-				//receiveTo[1] = "https://*:443/webhooks/"; //TODO figure out how to do SSL
+				receiveTo[1] = "http://*:8080/rss/";
+				//receiveTo[2] = "https://*:443/webhooks/"; //TODO figure out how to do SSL
 			}
 			_listener = new HttpListener();
 			foreach (string prefix in receiveTo)
@@ -144,16 +146,22 @@ namespace Maina.WebHooks.Server
 
 				HttpListenerRequest request = context.Request;
 
-				if (request.HttpMethod != "POST") {
-					RespondWithError(405, context); //Method not allowed
-					return;
-				}
+				
 				if (request.UserAgent == null || TrustedUserAgents.Find(x => request.UserAgent.Contains(x)) == null) {
-					RespondWithError(401, context); //Unauthorized
+					answered = RespondWithError(401, context); //Unauthorized
 					return;
 				}
+				if (request.RawUrl != "/webhooks" && request.RawUrl != "/webhooks/") {
+					answered = ProcessRSS(context);
+					return;
+				}
+				if (request.HttpMethod != "POST") {
+					answered = RespondWithError(405, context); //Method not allowed
+					return;
+				}
+				
 				if (!request.HasEntityBody) {
-					RespondWithError(400, context); //Bad Request
+					answered = RespondWithError(400, context); //Bad Request
 					return;
 				}
 
@@ -195,14 +203,14 @@ namespace Maina.WebHooks.Server
 				answered = RespondWithError(500, context); //Internal Server Error
 				_observer?.OnWebHookRequestProcessFail(e);
 			}
-
-
-			if (!answered){
-				try {
-					RespondWithError(500, context); //Internal Server Error
-				}
-				catch (Exception e) {
-					_observer?.OnWebHookRequestProcessFail(e);
+			finally {
+				if (!answered){
+					try {
+						RespondWithError(500, context); //Internal Server Error
+					}
+					catch (Exception e) {
+						_observer?.OnWebHookRequestProcessFail(e);
+					}
 				}
 			}
 
@@ -210,6 +218,62 @@ namespace Maina.WebHooks.Server
 			if (payload != null) {
 				_observer?.OnPayloadReceived(payloadType, payload);
 			}
+		}
+
+		private bool ProcessRSS(HttpListenerContext context)
+		{
+			bool answered = false;
+
+			HttpListenerRequest request = context.Request;
+
+			try {
+				if (request.RawUrl != "/rss" && request.RawUrl != "/rss/")
+					return RespondWithError(404, context); //Not found
+				
+				if (request.HttpMethod != "GET")
+					return RespondWithError(405, context); //Method not allowed
+				
+				if (request.Headers.Get("Action") == null || request.Headers.Get("Action") != "List-Feeds")
+					return RespondWithError(406, context); //Not acceptable
+				
+				
+				RSSFeed [] feeds = _observer.GetRSSFeedList();
+				if (feeds == null)
+					return RespondWithError(404, context);
+
+				
+				HttpListenerResponse response = context.Response;
+				string body = JsonConvert.SerializeObject(feeds);
+				byte [] buff = Encoding.UTF8.GetBytes(body);
+				response.ContentLength64 = buff.Length;
+				response.StatusCode = 200; //OK
+				response.ContentType = "application/json; charset=utf-8";
+				using (Stream output = response.OutputStream) {
+					output.Write(buff, 0, buff.Length);
+					output.Close();
+				}
+				answered = true;
+
+				
+
+
+			}
+			catch(Exception e) {
+				answered = RespondWithError(500, context); //Internal Server Error
+				_observer?.OnWebHookRequestProcessFail(e);
+			}
+			finally {
+				if (!answered){
+					try {
+						RespondWithError(500, context); //Internal Server Error
+						answered = true;
+					}
+					catch (Exception e) {
+						_observer?.OnWebHookRequestProcessFail(e);
+					}
+				}
+			}
+			return answered;
 		}
 
 

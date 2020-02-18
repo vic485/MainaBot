@@ -14,7 +14,7 @@ using Maina.Database.Models;
 
 namespace Maina.WebHooks
 {
-	public class WebHooksManager : IDisposable, WebHookObserver
+	public class WebHooksManager : IDisposable, WebHookIntermediary
 	{
 
 
@@ -164,22 +164,10 @@ namespace Maina.WebHooks
 		}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		public RSSFeed[] GetRSSFeedList()
+		{
+			return _dataBaseManager.GetAll<RSSFeed>("https://mangadex.org/rss/");
+		}
 
 
 
@@ -240,6 +228,6 @@ namespace Maina.WebHooks
 			_listener = null;
 		}
 
-
+		
 	}
 }

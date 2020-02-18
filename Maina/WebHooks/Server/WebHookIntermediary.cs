@@ -1,8 +1,9 @@
-﻿using System;
+﻿using Maina.Database.Models;
+using System;
 
 namespace Maina.WebHooks.Server
 {
-	public interface WebHookObserver
+	public interface WebHookIntermediary
 	{
 		
 		/// <summary>
@@ -32,6 +33,9 @@ namespace Maina.WebHooks.Server
 		/// </summary>
 		/// <param name="e">The exception.</param>
 		void OnWebHookRequestProcessFail (Exception e);
+
+
+		RSSFeed[] GetRSSFeedList ();
 
 	}
 }
