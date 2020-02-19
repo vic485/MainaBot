@@ -31,23 +31,28 @@ namespace Maina.Administrative
 						if (gc.NewsChannel.HasValue) {
 							SocketGuild guild = discordSocketClient.GetGuild(gc.NumberId);
 
+							bool publish = false;
 							StringBuilder pings = new StringBuilder();
 							if (gc.AllNewsRole.HasValue) {
 								SocketRole role = guild.GetRole(gc.AllNewsRole.Value);
 								pings.Append(role.Mention);
 								pings.Append(" ");
+								publish = true;
 							}
 							foreach (string tag in tags) {
 								if (gc.NewsRoles.ContainsKey(tag)) {
 									SocketRole role = guild.GetRole(gc.NewsRoles[tag]);
 									pings.Append(role.Mention);
 									pings.Append(" ");
+									publish = true;
 								}
 							}
-							
-						
-							SocketTextChannel channel = guild.GetTextChannel(gc.NewsChannel.Value);
-							_ = channel.SendMessageAsync(pings.ToString(), false, payload.Build());
+
+							//Only publish if there is at least one tag assigned to a role.
+							if (publish) {
+								SocketTextChannel channel = guild.GetTextChannel(gc.NewsChannel.Value);
+								_ = channel.SendMessageAsync(pings.ToString(), false, payload.Build());
+							}
 						}
 					}
 					catch (Exception){ }
