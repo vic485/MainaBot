@@ -94,21 +94,17 @@ namespace Maina.WebHooks.Server
 			try {
 				while (!_end) {
 
-					_listener.BeginGetContext(new AsyncCallback(RetrieveRequest), _listener);
+					_listener?.BeginGetContext(new AsyncCallback(RetrieveRequest), _listener);
 
-					KeepWorking.WaitOne();
+					KeepWorking?.WaitOne();
 				}
 			}
 			catch (Exception e) {
 				_observer?.OnWebHookListenFail(e, false);
 			}
 			finally {
-				if (_listener.IsListening) {
-					_listener?.Stop();
-					_listener?.Close();
-				}
-				_listener = null;
-				ListenerStopped.Set();
+				ListenerStopped?.Set();
+				Dispose();
 			}
 		}
 
@@ -134,19 +130,20 @@ namespace Maina.WebHooks.Server
 
 		private void RetrieveRequest(IAsyncResult ar)
 		{
-			KeepWorking.Set();
 
 			PayloadType payloadType = PayloadType.Unknown;
 			string payload = null;
 			bool answered = false;
 			HttpListener listener = (HttpListener)ar.AsyncState;
 			HttpListenerContext context = listener.EndGetContext(ar);
+			//Keep working after we have the context??
+			KeepWorking.Set();
 
 			try {
 
 				HttpListenerRequest request = context.Request;
 
-				
+
 				if (request.UserAgent == null || TrustedUserAgents.Find(x => request.UserAgent.Contains(x)) == null) {
 					answered = RespondWithError(401, context); //Unauthorized
 					return;
@@ -159,7 +156,7 @@ namespace Maina.WebHooks.Server
 					answered = RespondWithError(405, context); //Method not allowed
 					return;
 				}
-				
+
 				if (!request.HasEntityBody) {
 					answered = RespondWithError(400, context); //Bad Request
 					return;
@@ -229,19 +226,19 @@ namespace Maina.WebHooks.Server
 			try {
 				if (request.RawUrl != "/rss" && request.RawUrl != "/rss/")
 					return RespondWithError(404, context); //Not found
-				
+
 				if (request.HttpMethod != "GET")
 					return RespondWithError(405, context); //Method not allowed
-				
+
 				if (request.Headers.Get("Action") == null || request.Headers.Get("Action") != "List-Feeds")
 					return RespondWithError(406, context); //Not acceptable
-				
-				
+
+
 				RSSFeed [] feeds = _observer.GetRSSFeedList();
 				if (feeds == null)
 					return RespondWithError(404, context);
 
-				
+
 				HttpListenerResponse response = context.Response;
 				string body = JsonConvert.SerializeObject(feeds);
 				byte [] buff = Encoding.UTF8.GetBytes(body);
@@ -254,7 +251,7 @@ namespace Maina.WebHooks.Server
 				}
 				answered = true;
 
-				
+
 
 
 			}
@@ -293,12 +290,17 @@ namespace Maina.WebHooks.Server
 				{
 
 				}
-				_end = true;
-				KeepWorking.Set();
+				_end = true
+				KeepWorking?.Set();
+
 				_listener?.Abort();
+				//_listener?.Dispose();
 				_listener = null;
+
 				KeepWorking.Dispose();
-				ListenerStopped.Dispose();
+				KeepWorking= null;
+				ListenerStopped?.Dispose();
+				ListenerStopped = null;
 
 				// TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
 				// TODO: set large fields to null.
