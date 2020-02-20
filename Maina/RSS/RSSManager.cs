@@ -36,11 +36,13 @@ namespace Maina.RSS
 		{
 			EmbedBuilder eb = new EmbedBuilder { Color = new Color((uint) EmbedColor.SalmonPink) };
 			eb.WithAuthor("I've heard some great news!");
-			//TODO Add manga cover
-			//eb.WithThumbnailUrl("https://cdn.discordapp.com/attachments/677950856921874474/678657998637236266/Miharu_Bot_Final.png");
+			int idIndex = e.Feed.Id.LastIndexOf("/") +1;
+			int id = -1;
+			if (int.TryParse(e.Feed.Id.Substring(idIndex), out id))
+				eb.WithImageUrl($"https://mangadex.org/images/manga/{id}.jpeg");
 			eb.WithTitle(e.Update.Title.Text);
 			eb.WithUrl(e.Update.Id);
-			eb.WithDescription($"There is a new chapter available to read!");
+			eb.WithFooter($"There is a new chapter available to read!");
 			await DiscordAPIHelper.PublishNews(eb, _databaseManager, _discordSocketClient, e.Feed.Tag);
 		}
 
