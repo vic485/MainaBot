@@ -84,18 +84,27 @@ namespace Maina.HTTP.Server
 				if (!request.HasEntityBody)
 					answered = RespondToRequest(context, HttpStatusCode.BadRequest); //Bad Request
 
+				else if (request.Headers.Get("Signature") == null)
+					answered = RespondToRequest(context, HttpStatusCode.BadRequest);
+
 				else if (!(request.ContentType ?? "").Contains("application/json") || request.Headers.Get("Payload-Object") == null ||  request.Headers.Get("Payload-Object") != "RSS-Feed")
 					answered = RespondToRequest(context, HttpStatusCode.BadRequest); //Bad Request
 
 				else {
-					using (StreamReader input = new StreamReader(request.InputStream, request.ContentEncoding ?? Encoding.UTF8)) {
+					Encoding encoding = request.ContentEncoding ?? Encoding.UTF8;
+					using (StreamReader input = new StreamReader(request.InputStream, encoding)) {
 						payload = input.ReadToEnd();
 
 						input.Close();
 					}
-				
-					answered = RespondToRequest(context, HttpStatusCode.OK); //TODO send a proper response with a body
-					ProcessPayload(payload);
+
+					if (!VerifySignature(request.Headers.Get("Signature"), encoding.GetBytes(payload)))
+						answered = RespondToRequest(context, HttpStatusCode.Unauthorized);
+
+					else {
+						answered = RespondToRequest(context, HttpStatusCode.OK); //TODO send a proper response with a body
+						ProcessPayload(payload);
+					}
 				}
 			}
 			catch (Exception e) {

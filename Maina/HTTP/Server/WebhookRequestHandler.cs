@@ -40,7 +40,7 @@ namespace Maina.HTTP.Server
 					answered = RespondToRequest(context, HttpStatusCode.BadRequest); //Bad Request
 
 				else if (request.Headers.Get("X-Hub-Signature") == null)
-					answered = RespondToRequest(context, HttpStatusCode.Unauthorized);
+					answered = RespondToRequest(context, HttpStatusCode.BadRequest);
 
 				else if (request.Headers.Get("X-GitHub-Event") == null)
 					answered = RespondToRequest(context, HttpStatusCode.BadRequest); //Bad Request
@@ -61,10 +61,10 @@ namespace Maina.HTTP.Server
 					if (!VerifySignature(request.Headers.Get("X-Hub-Signature"), encoding.GetBytes(payload)))
 						answered = RespondToRequest(context, HttpStatusCode.Unauthorized);
 
-					
-					answered = RespondToRequest(context, HttpStatusCode.OK); //TODO send a proper response with a body
-					ProcessPayload(payload);
-					
+					else {
+						answered = RespondToRequest(context, HttpStatusCode.OK); //TODO send a proper response with a body
+						ProcessPayload(payload);
+					}
 				}
 			}
 			catch (Exception e) {
