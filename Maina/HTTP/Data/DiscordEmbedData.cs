@@ -1,6 +1,6 @@
 ﻿
 
-namespace Maina.WebHooks.Data
+namespace Maina.HTTP.Data
 {
 	
 

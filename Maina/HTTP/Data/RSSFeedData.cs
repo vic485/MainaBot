@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Maina.WebHooks.Data
+namespace Maina.HTTP.Data
 {
 	public class RSSFeedData
 	{

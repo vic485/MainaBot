@@ -8,7 +8,7 @@ using Maina.Core;
 using Maina.Core.Logging;
 using Maina.Database;
 using Maina.RSS;
-using Maina.WebHooks;
+using Maina.HTTP;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Maina
@@ -25,7 +25,7 @@ namespace Maina
                 await services.GetRequiredService<DiscordHandler>().InitializeAsync(services).ConfigureAwait(false);
 
 				string [] trusted = { "Kuuki-Scans" };
-				services.GetService<WebHooksManager>().Initialize(null, trusted);
+				services.GetService<HTTPServerManager>().Initialize(null, trusted);
 				services.GetService<RSSManager>().Initialize();
 
 
@@ -54,7 +54,7 @@ namespace Maina
                 }))
                 .AddSingleton<DatabaseManager>()
                 .AddSingleton<DiscordHandler>()
-				.AddSingleton<WebHooksManager>()
+				.AddSingleton<HTTPServerManager>()
 				.AddSingleton<RSSManager>()
                 .BuildServiceProvider();
     }

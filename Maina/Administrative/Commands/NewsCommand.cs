@@ -60,9 +60,11 @@ namespace Maina.Administrative.Commands
 			[RequireUserPermission(GuildPermission.ManageRoles)]
 			public async Task BaseCommand()
 			{
+				GuildConfig gc = Context.GuildConfig;
 				SocketGuild guild = Context.Guild;
 				EmbedBuilder eb = CreateEmbed(EmbedColor.SalmonPink);
 				eb.WithAuthor($"List of news roles.");
+
 				bool atLeastOneRole = false;
 				if (gc.AllNewsRole.HasValue) {
 					SocketRole role = guild.GetRole(gc.AllNewsRole.Value);
@@ -78,7 +80,7 @@ namespace Maina.Administrative.Commands
 				if (atLeastOneRole)
 					await ReplyAsync(string.Empty, eb.Build(), false, true);
 				else {
-					EmbedBuilder eb = CreateEmbed(EmbedColor.Red);
+					eb = CreateEmbed(EmbedColor.Red);
 					eb.WithAuthor($"No roles assigned to tags :C");
 					await ReplyAsync(string.Empty, eb.Build(), false, true);
 				}
@@ -115,46 +117,48 @@ namespace Maina.Administrative.Commands
 
 			}
 
-			[Command("remove")]
+			[Group("remove")]
 			[RequireUserPermission(GuildPermission.ManageRoles)]
-			public async Task BaseCommand()
-			{
-				EmbedBuilder eb = null;
-				if (Context.GuildConfig.AllNewsRole.HasValue) {
-					SocketRole role = Context.Guild.GetRole(Context.GuildConfig.AllNewsRole.Value);
-					Context.GuildConfig.AllNewsRole = null;
-					eb = CreateEmbed(EmbedColor.SalmonPink);
-					eb.WithAuthor($"News role removed!");
-					eb.WithDescription($"I will no longer ping {role.Mention} for all news.");
-				}
-				else {
-					eb = CreateEmbed(EmbedColor.Red);
-					eb.WithAuthor($"There was no role for all news.");
-				}
+			public class RemoveSubCommand : MainaBase{
+				[Command]
+				public async Task BaseCommand()
+				{
+					EmbedBuilder eb = null;
+					if (Context.GuildConfig.AllNewsRole.HasValue) {
+						SocketRole role = Context.Guild.GetRole(Context.GuildConfig.AllNewsRole.Value);
+						Context.GuildConfig.AllNewsRole = null;
+						eb = CreateEmbed(EmbedColor.SalmonPink);
+						eb.WithAuthor($"News role removed!");
+						eb.WithDescription($"I will no longer ping {role.Mention} for all news.");
+					}
+					else {
+						eb = CreateEmbed(EmbedColor.Red);
+						eb.WithAuthor($"There was no role for all news.");
+					}
 
-				await ReplyAsync(string.Empty, eb.Build(), false, true);
+					await ReplyAsync(string.Empty, eb.Build(), false, true);
 
-			}
-
-			[Command("remove")]
-			[RequireUserPermission(GuildPermission.ManageRoles)]
-			public async Task BaseCommand(string tag)
-			{
-				EmbedBuilder eb = null;
-				if (Context.GuildConfig.NewsRoles.ContainsKey(tag)) {
-					SocketRole role = Context.Guild.GetRole(Context.GuildConfig.NewsRoles[tag]);
-					Context.GuildConfig.NewsRoles.Remove(tag);
-					eb = CreateEmbed(EmbedColor.SalmonPink);
-					eb.WithAuthor($"News role removed!");
-					eb.WithDescription($"I will no longer ping {role.Mention} for news with {tag} tag.");
-				}
-				else {
-					eb = CreateEmbed(EmbedColor.Red);
-					eb.WithAuthor($"There is no role linked to that tag.");
 				}
 
-				await ReplyAsync(string.Empty, eb.Build(), false, true);
+				[Command]
+				public async Task BaseCommand(string tag)
+				{
+					EmbedBuilder eb = null;
+					if (Context.GuildConfig.NewsRoles.ContainsKey(tag)) {
+						SocketRole role = Context.Guild.GetRole(Context.GuildConfig.NewsRoles[tag]);
+						Context.GuildConfig.NewsRoles.Remove(tag);
+						eb = CreateEmbed(EmbedColor.SalmonPink);
+						eb.WithAuthor($"News role removed!");
+						eb.WithDescription($"I will no longer ping {role.Mention} for news with {tag} tag.");
+					}
+					else {
+						eb = CreateEmbed(EmbedColor.Red);
+						eb.WithAuthor($"There is no role linked to that tag.");
+					}
 
+					await ReplyAsync(string.Empty, eb.Build(), false, true);
+
+				}
 			}
 		}
 

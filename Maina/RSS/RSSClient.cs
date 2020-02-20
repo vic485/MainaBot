@@ -20,6 +20,8 @@ namespace Maina.RSS
 
 		public event RSSUpdateEventHandler RSSUpdate;
 
+		public event RSSErrorEventHandler RSSError;
+
 
 		public  RSSClient(DatabaseManager databaseManager) {
 			_databaseManager = databaseManager;
@@ -59,7 +61,9 @@ namespace Maina.RSS
 
 				}
 			}
-			catch (Exception) { }
+			catch (Exception e) {
+				Logger.LogError("Error processing a RSS feed: " + e.Message);
+			}
 		}
 
 		
@@ -81,9 +85,12 @@ namespace Maina.RSS
 			}
 			catch (Exception e) {
 				Logger.LogError("Error in RSSFeed ThreadLoop: " + e.Message);
+				RSSError?.Invoke(this, new RSSErrorEventArgs(false));
+
 			}
 			finally {
-				End();
+				if (!_disposed)
+				Dispose();
 			}
 		}
 
@@ -91,16 +98,6 @@ namespace Maina.RSS
 
 		
 		
-
-		private void End()
-		{
-			if (!_disposed)
-				Dispose();
-			
-		}
-
-
-
 
 		private volatile bool _disposed = false;
 		public void Dispose()

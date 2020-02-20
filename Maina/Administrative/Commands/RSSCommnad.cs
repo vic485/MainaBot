@@ -39,17 +39,24 @@ namespace Maina.Administrative.Commands
 		[RequireOwner]
 		public async Task BaseCommand(string url, string tag)
 		{
-			RSSFeed feed = new RSSFeed { Id = url, Tag = tag };
-			if (!Context.Database.Exists<RSSFeed>(feed)) {
-				Context.Database.Save<RSSFeed>(feed);
-				EmbedBuilder eb = CreateEmbed(EmbedColor.SalmonPink);
-				eb.WithAuthor("Added RSS feed.");
-				eb.WithDescription("RSS feeds are only polled every 60 seconds, be patient if no news appear inmediately.");
-				await ReplyAsync(string.Empty, eb.Build(), false, false);
+			if (url.StartsWith("https://mangadex.org/rss/")) {
+				RSSFeed feed = new RSSFeed { Id = url, Tag = tag };
+				if (!Context.Database.Exists<RSSFeed>(feed)) {
+					Context.Database.Save<RSSFeed>(feed);
+					EmbedBuilder eb = CreateEmbed(EmbedColor.SalmonPink);
+					eb.WithAuthor("Added RSS feed.");
+					eb.WithDescription("RSS feeds are only polled every 60 seconds, be patient if no news appears immediately.");
+					await ReplyAsync(string.Empty, eb.Build(), false, false);
+				}
+				else {
+					EmbedBuilder eb = CreateEmbed(EmbedColor.Red);
+					eb.WithAuthor("I'm already subscribed to that RSS feed.");
+					await ReplyAsync(string.Empty, eb.Build(), false, false);
+				}
 			}
 			else {
-				EmbedBuilder eb = CreateEmbed(EmbedColor.SalmonPink);
-				eb.WithAuthor("I'm already subscribed to that RSS feed.");
+				EmbedBuilder eb = CreateEmbed(EmbedColor.Red);
+				eb.WithAuthor("That's not a valid RSS feed URL.");
 				await ReplyAsync(string.Empty, eb.Build(), false, false);
 			}
 
@@ -69,7 +76,7 @@ namespace Maina.Administrative.Commands
 				await ReplyAsync(string.Empty, eb.Build(), false, false);
 			}
 			else {
-				EmbedBuilder eb = CreateEmbed(EmbedColor.SalmonPink);
+				EmbedBuilder eb = CreateEmbed(EmbedColor.Red);
 				eb.WithAuthor("I'm not subscribed to that RSS feed.");
 				await ReplyAsync(string.Empty, eb.Build(), false, false);
 			}

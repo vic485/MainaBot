@@ -1,7 +1,7 @@
 ﻿
 
 
-namespace Maina.WebHooks.Data
+namespace Maina.HTTP.Data
 {
 	
 	public class GithubReleaseData {

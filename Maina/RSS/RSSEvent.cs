@@ -6,6 +6,10 @@ namespace Maina.RSS
 {
 	public delegate void RSSUpdateEventHandler (object sender, RSSUpdateEventArgs e);
 
+	public delegate void RSSErrorEventHandler (object sender, RSSErrorEventArgs e);
+
+	
+
 	public class RSSUpdateEventArgs : EventArgs {
 		public SyndicationItem Update { get; set; }
 
@@ -18,5 +22,16 @@ namespace Maina.RSS
 			Feed = feed;
 		}
 
+	}
+
+
+	public class RSSErrorEventArgs : EventArgs 
+	{
+
+		public bool StillAlive { get; set; }
+
+		public RSSErrorEventArgs (bool stillAlive) {
+			StillAlive = stillAlive;
+		}
 	}
 }
