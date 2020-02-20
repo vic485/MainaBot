@@ -48,7 +48,6 @@ namespace Maina.HTTP.Server
 		/// <param name="receiveTo">An array with the prefixes for which to accept requests.
 		/// <para>If null default prefixes are "http://*:8080/webhooks/" and "https://*:443/webhooks/"</para></param>
 		public HTTPServer (int port, DiscordSocketClient client, DatabaseManager database) {
-			TrustedUserAgents.Add("GitHub-Hookshot");
 			_listener = new HttpListener();
 
 			Type[] requestHandlers = (from domainAssembly in AppDomain.CurrentDomain.GetAssemblies()

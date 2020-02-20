@@ -7,6 +7,7 @@ using Discord.WebSocket;
 using Maina.Core;
 using Maina.Core.Logging;
 using Maina.Database;
+using Maina.Database.Models;
 using Maina.RSS;
 using Maina.HTTP;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,21 +21,22 @@ namespace Maina
             Logger.Initialize(LogType.Debug, Path.Combine(Directory.GetCurrentDirectory(), "log.txt"), "0.0.1");
 
             using (var services = SetupServices())
-            {	
-				if (args.Length == 1 && (args[0] == "-r" || args[0] == "--reset"))
-					services.GetRequiredService<DatabaseManager>().ResetConfig();
+            {
+                if (args.Length == 1 && (args[0] == "-r" || args[0] == "--reset"))
+                    services.GetRequiredService<DatabaseManager>().ResetConfig();
                 services.GetRequiredService<DatabaseManager>().CheckConfig();
                 await services.GetRequiredService<DiscordHandler>().InitializeAsync(services).ConfigureAwait(false);
 
-				string [] trusted = { "Kuuki-Scans" };
-				services.GetService<HTTPServerManager>().Initialize(null, trusted);
-				services.GetService<RSSManager>().Initialize();
+                var trusted = services.GetRequiredService<DatabaseManager>().Get<BotConfig>("Config").UserAgents
+                    .ToArray();
+                services.GetService<HTTPServerManager>().Initialize(null, trusted);
+                services.GetService<RSSManager>().Initialize();
 
 
-				/* TODO
-				 * Here you would put a command line program to manage the bot.
-				 * Mainly so it can be shutdown safely (close/Dispose all the services).
-				 * (IDisposable objects may not necessarilly be Disposed on program exit). */
+                /* TODO
+                 * Here you would put a command line program to manage the bot.
+                 * Mainly so it can be shutdown safely (close/Dispose all the services).
+                 * (IDisposable objects may not necessarilly be Disposed on program exit). */
                 await Task.Delay(-1);
             }
         }
@@ -56,8 +58,8 @@ namespace Maina
                 }))
                 .AddSingleton<DatabaseManager>()
                 .AddSingleton<DiscordHandler>()
-				.AddSingleton<HTTPServerManager>()
-				.AddSingleton<RSSManager>()
+                .AddSingleton<HTTPServerManager>()
+                .AddSingleton<RSSManager>()
                 .BuildServiceProvider();
     }
 }

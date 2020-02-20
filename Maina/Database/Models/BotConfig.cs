@@ -1,4 +1,6 @@
-﻿namespace Maina.Database.Models
+﻿using System.Collections.Generic;
+
+namespace Maina.Database.Models
 {
     /// <summary>
     /// Shared bot configuration settings
@@ -9,14 +11,14 @@
         /// Token to connect to discord
         /// </summary>
         public string Token { get; set; }
-        
+
         /// <summary>
         /// Default prefix for commands
         /// </summary>
         public string Prefix { get; set; }
 
+        public List<string> UserAgents { get; set; } = new List<string>();
 
-
-		public string SecretToken { get; set; }
+        public string SecretToken { get; set; }
     }
 }
