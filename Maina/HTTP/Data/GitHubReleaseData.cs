@@ -3,7 +3,9 @@
 
 namespace Maina.HTTP.Data
 {
-	
+	public class GithubRepositoryData {
+		public string html_url;
+	}
 	public class GithubReleaseData {
 		public string html_url;
 		public string tag_name;
@@ -14,6 +16,7 @@ namespace Maina.HTTP.Data
 	{
 		public string action;
 		public GithubReleaseData release;
+		public GithubRepositoryData repository;
 	}
 
 

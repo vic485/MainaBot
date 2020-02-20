@@ -81,7 +81,7 @@ namespace Maina.HTTP.Server
 				EmbedBuilder eb = null;
 				eb = new EmbedBuilder { Color = new Color((uint) EmbedColor.SalmonPink) };
 				eb.WithAuthor("I've heard some great news!");
-				eb.WithThumbnailUrl("https://cdn.discordapp.com/attachments/677950856921874474/678657998637236266/Miharu_Bot_Final.png");
+				eb.WithThumbnailUrl(ghdata.repository.html_url + "/raw/master/thumbnail.png");
 				eb.WithTitle(ghdata.release.name);
 				eb.WithUrl(ghdata.release.html_url);
 				eb.WithDescription("There is a new version of Miharu Available!");
