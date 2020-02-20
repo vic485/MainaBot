@@ -34,7 +34,14 @@ namespace Maina.HTTP
 		}
 
 
-		
+		public void ChangeAgents(List<string> agentList)
+		{
+			_listener?.TrustedUserAgents.Clear();
+			foreach (var agent in agentList)
+			{
+				_listener?.TrustedUserAgents.Add(agent);
+			}
+		}
 			
 
 
@@ -44,15 +51,8 @@ namespace Maina.HTTP
 		/// </summary>
 		/// <param name="receiveTo">The addresses to listen to.</param>
 		public void Initialize (string [] receiveTo = null, string [] trustedUserAgents = null) {
-			_listener = new HTTPServer (8080, _discordSocketClient, _databaseManager);
-			_listener.Error += OnHTTPServerError;
 			_trustedUserAgents = trustedUserAgents;
-			if (_trustedUserAgents != null)
-				_listener.TrustedUserAgents.AddRange(_trustedUserAgents);
-
-			Task.Run(() => {
-				_listener.StartListening();
-			});
+			ResetServer();
 
 			string [] whURLs = _listener.GetWebHookURLs();
 			if (whURLs != null) {
