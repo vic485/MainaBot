@@ -48,18 +48,18 @@ namespace Maina.HTTP.Server
 				else if (request.Headers.Get("X-GitHub-Event") != "release")
 					answered = RespondToRequest(context, HttpStatusCode.NoContent); //Ok, but No Content
 
-				else if (!VerifySignature(request.Headers.Get("X-Hub-Signature"), request.InputStream))
-						answered = RespondToRequest(context, HttpStatusCode.Unauthorized);
-
 				else {
 
 					string payload;
-					using (StreamReader input = new StreamReader(request.InputStream, request.ContentEncoding ?? Encoding.UTF8)) {
+					Encoding encoding = request.ContentEncoding ?? Encoding.UTF8;
+					using (StreamReader input = new StreamReader(request.InputStream, encoding)) {
 						payload = input.ReadToEnd();
-						using (StreamWriter writer = new StreamWriter("payload.txt"))
-							writer.Write(payload);
+					
 						input.Close();
 					}
+
+					if (!VerifySignature(request.Headers.Get("X-Hub-Signature"), encoding.GetBytes(payload)))
+						answered = RespondToRequest(context, HttpStatusCode.Unauthorized);
 
 					
 					answered = RespondToRequest(context, HttpStatusCode.OK); //TODO send a proper response with a body

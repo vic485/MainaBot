@@ -54,21 +54,18 @@ namespace Maina.HTTP.Server
 			}
 		}
 
-		public bool VerifySignature (string receivedSignature, Stream payload) {
+		public bool VerifySignature (string receivedSignature, byte[] payload) {
 			string token = _databaseManager.Get<BotConfig>("Config").SecretToken;
 			HMACSHA1 hmac = new HMACSHA1(Encoding.ASCII.GetBytes(token));
 			hmac.Initialize();
 
-			string signature = BitConverter.ToString(hmac.ComputeHash(payload));
-			signature = signature.Replace("-", "");
-			signature = signature.ToLower();
-			signature = "sha1=" + signature;
+			string expectedSignature = BitConverter.ToString(hmac.ComputeHash(payload));
+			expectedSignature = expectedSignature.Replace("-", "");
+			expectedSignature = expectedSignature.ToLower();
+			expectedSignature = "sha1=" + expectedSignature;
 
-			Logger.LogForce("Signatures did" + (signature == receivedSignature ? "" : "'nt") + " match!");
-			Logger.LogForce($"Received signature: {receivedSignature}");
-			Logger.LogForce($"Hashed signature: {signature}");
 
-			return true;
+			return receivedSignature == expectedSignature;
 		}
 
 
