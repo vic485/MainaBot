@@ -20,7 +20,9 @@ namespace Maina
             Logger.Initialize(LogType.Debug, Path.Combine(Directory.GetCurrentDirectory(), "log.txt"), "0.0.1");
 
             using (var services = SetupServices())
-            {
+            {	
+				if (args.Length == 1 && (args[0] == "-r" || args[0] == "--reset"))
+					services.GetRequiredService<DatabaseManager>().ResetConfig();
                 services.GetRequiredService<DatabaseManager>().CheckConfig();
                 await services.GetRequiredService<DiscordHandler>().InitializeAsync(services).ConfigureAwait(false);
 

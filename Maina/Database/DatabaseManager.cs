@@ -31,18 +31,33 @@ namespace Maina.Database
 
                 Logger.LogVerbose("No configuration found in database, creating now.");
                 Logger.LogForce("Enter bot token: ");
-                var token = Console.ReadLine();
+                string token = Console.ReadLine();
                 Logger.LogForce("Enter bot prefix: ");
-                var prefix = Console.ReadLine();
+                string prefix = Console.ReadLine();
+				Logger.LogForce ("Enter HTTP password: ");
+				string pw = Console.ReadLine();
 
                 Save(new BotConfig
                 {
                     Id = "Config",
                     Token = token,
-                    Prefix = prefix
+                    Prefix = prefix,
+					SecretToken = pw
                 });
             }
         }
+
+
+		public void ResetConfig() {
+			using (var session = Store.OpenSession())
+            {
+				if (session.Advanced.Exists("Config")) {
+					session.Delete("Config");
+					session.SaveChanges();
+					Logger.LogInfo($"Reset bot configuration.");
+				}
+			}
+		}
 
         /// <summary>
         /// Retrieves an item from the database

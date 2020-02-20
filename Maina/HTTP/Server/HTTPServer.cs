@@ -106,7 +106,7 @@ namespace Maina.HTTP.Server
 				}
 			}
 			catch (Exception e) {
-				//TODO trigger event.
+				Error?.Invoke(this, new HTTPServerEventArgs(e, false));
 			}
 			finally {
 				ListenerStopped?.Set();

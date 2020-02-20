@@ -1,9 +1,12 @@
 ﻿
 using Discord.WebSocket;
+using Maina.Core.Logging;
 using Maina.Database;
+using Maina.Database.Models;
 using System;
 using System.IO;
 using System.Net;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Maina.HTTP.Server
@@ -49,6 +52,23 @@ namespace Maina.HTTP.Server
 			catch (Exception) {
 				return false;
 			}
+		}
+
+		public bool VerifySignature (string receivedSignature, Stream payload) {
+			string token = _databaseManager.Get<BotConfig>("Config").SecretToken;
+			HMACSHA1 hmac = new HMACSHA1(Encoding.ASCII.GetBytes(token));
+			hmac.Initialize();
+
+			string signature = BitConverter.ToString(hmac.ComputeHash(payload));
+			signature = signature.Replace("-", "");
+			signature = signature.ToLower();
+			signature = "sha1=" + signature;
+
+			Logger.LogForce("Signatures did" + (signature == receivedSignature ? "" : "'nt") + " match!");
+			Logger.LogForce($"Received signature: {receivedSignature}");
+			Logger.LogForce($"Hashed signature: {signature}");
+
+			return true;
 		}
 
 

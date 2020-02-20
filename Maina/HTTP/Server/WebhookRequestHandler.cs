@@ -30,7 +30,6 @@ namespace Maina.HTTP.Server
 		public override bool HandleRequest(HttpListenerContext context)
 		{
 			bool answered = false;
-			string payload = "";
 			HttpListenerRequest request = context.Request;
 			
 			try {
@@ -40,21 +39,32 @@ namespace Maina.HTTP.Server
 				else if (!request.HasEntityBody)
 					answered = RespondToRequest(context, HttpStatusCode.BadRequest); //Bad Request
 
+				else if (request.Headers.Get("X-Hub-Signature") == null)
+					answered = RespondToRequest(context, HttpStatusCode.Unauthorized);
+
 				else if (request.Headers.Get("X-GitHub-Event") == null)
 					answered = RespondToRequest(context, HttpStatusCode.BadRequest); //Bad Request
 
 				else if (request.Headers.Get("X-GitHub-Event") != "release")
 					answered = RespondToRequest(context, HttpStatusCode.NoContent); //Ok, but No Content
 
+				else if (!VerifySignature(request.Headers.Get("X-Hub-Signature"), request.InputStream))
+						answered = RespondToRequest(context, HttpStatusCode.Unauthorized);
+
 				else {
+
+					string payload;
 					using (StreamReader input = new StreamReader(request.InputStream, request.ContentEncoding ?? Encoding.UTF8)) {
 						payload = input.ReadToEnd();
-
+						using (StreamWriter writer = new StreamWriter("payload.txt"))
+							writer.Write(payload);
 						input.Close();
 					}
-				
+
+					
 					answered = RespondToRequest(context, HttpStatusCode.OK); //TODO send a proper response with a body
 					ProcessPayload(payload);
+					
 				}
 			}
 			catch (Exception e) {

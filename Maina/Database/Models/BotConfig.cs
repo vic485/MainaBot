@@ -14,5 +14,9 @@
         /// Default prefix for commands
         /// </summary>
         public string Prefix { get; set; }
+
+
+
+		public string SecretToken { get; set; }
     }
 }
