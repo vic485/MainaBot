@@ -11,21 +11,21 @@ namespace Maina.Administrative.Commands
         public async Task SetJoinChannelAsync(SocketTextChannel channel)
         {
             Context.GuildConfig.WelcomeChannel = channel.Id;
-            await ReplyAsync($"Set welcome channel to {channel.Mention}");
+            await ReplyAsync($"Set welcome channel to {channel.Mention}", updateGuild: true);
         }
 
         [Command("set welcome message")]
         public async Task SetWelcomeMessageAsync([Remainder] string message)
         {
             Context.GuildConfig.WelcomeMessage = message;
-            await ReplyAsync("Welcome message set.");
+            await ReplyAsync("Welcome message set.", updateGuild: true);
         }
 
         [Command("set welcome message")]
         public async Task SetWelcomeMessageAsync()
         {
             Context.GuildConfig.WelcomeMessage = null;
-            await ReplyAsync("Removed welcome message.");
+            await ReplyAsync("Removed welcome message.", updateGuild: true);
         }
     }
 }
