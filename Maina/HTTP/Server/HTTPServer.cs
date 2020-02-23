@@ -29,16 +29,19 @@ namespace Maina.HTTP.Server
 
 		private HttpListener _listener = null;
 
-		public List<string> TrustedUserAgents {
-			get; private set;
-		} = new List<string>();
+		
 
 
 		private Dictionary<string, RequestHandler> _requestHandlers = new Dictionary<string, RequestHandler>();
 
 		private const string _ADDRESS_START = "http://*:";
 
-
+		public string IP {
+			get; private set;
+		}
+		public int Port {
+			get; private set;
+		}
 
 
 		/// <summary>
@@ -48,6 +51,13 @@ namespace Maina.HTTP.Server
 		/// <param name="receiveTo">An array with the prefixes for which to accept requests.
 		/// <para>If null default prefixes are "http://*:8080/webhooks/" and "https://*:443/webhooks/"</para></param>
 		public HTTPServer (int port, DiscordSocketClient client, DatabaseManager database) {
+			Port = port;
+			try {
+				using (WebClient wc = new WebClient())
+					IP = wc.DownloadString("http://ipinfo.io/ip");
+				IP = IP.TrimEnd();
+			}catch (Exception) {}
+
 			_listener = new HttpListener();
 
 			Type[] requestHandlers = (from domainAssembly in AppDomain.CurrentDomain.GetAssemblies()
@@ -57,25 +67,22 @@ namespace Maina.HTTP.Server
 
 			foreach (Type t in requestHandlers) {
 				RequestHandler rh = (RequestHandler)Activator.CreateInstance(t, client, database);
-				_listener.Prefixes.Add(_ADDRESS_START + port + rh.Prefix);
+				_listener.Prefixes.Add(_ADDRESS_START + port + "/" + rh.Prefix);
 				_requestHandlers.Add(rh.Prefix, rh);
 			}
 		}
 
+		
 
 		/// <summary>
 		/// </summary>
 		/// <returns>An array with the public WebHook URLs or null if it fails.</returns>
 		public string [] GetWebHookURLs () {
 			try {
-				string ip;
-				using (WebClient wc = new WebClient())
-					ip = wc.DownloadString("http://ipinfo.io/ip");
-				ip = ip.TrimEnd();
 				string [] urls = new string [_listener.Prefixes.Count];
 				int i = 0;
 				foreach (string p in _listener.Prefixes) {
-					urls[i] = p.Replace("*", ip);
+					urls[i] = p.Replace("*", IP);
 					i++;
 				}
 
@@ -139,19 +146,16 @@ namespace Maina.HTTP.Server
 			try {
 
 				HttpListenerRequest request = context.Request;
-				string prefix = request.RawUrl;
-				if (!prefix.EndsWith('/'))
-					prefix += '/';
+				string handlerPrefix = request.Url.Segments[1];
+				if (!handlerPrefix.EndsWith("/"))
+					handlerPrefix += "/";
 
-
-				if (request.UserAgent == null || TrustedUserAgents.Find(x => request.UserAgent.Contains(x)) == null)
-					answered = RequestHandler.RespondToRequest(context, HttpStatusCode.Unauthorized); //Unauthorized
+				if (!_requestHandlers.ContainsKey(handlerPrefix))
+					answered = RequestHandler.RespondToRequest(context, HttpStatusCode.NotFound); //Not Found
 				
-				else if (!_requestHandlers.ContainsKey(prefix))
-					answered = RequestHandler.RespondToRequest(context, HttpStatusCode.NotFound); //Unauthorized
-					
 				else
-				 answered = _requestHandlers[prefix].HandleRequest(context);
+					answered = _requestHandlers[handlerPrefix].HandleRequest(context);
+				 
 			}
 			catch(Exception e) {
 				if (!answered) {

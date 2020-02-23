@@ -1,6 +1,8 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
+using Discord;
 using Discord.Commands;
+using Maina.Administrative;
 using Maina.Core;
 using Maina.HTTP;
 using Maina.HTTP.Server;
@@ -15,7 +17,9 @@ namespace Maina.Owner.Commands
         {
             if (Context.Config.UserAgents.Contains(agent))
             {
-                await ReplyAsync("This user agent has already been added.");
+				await DiscordAPIHelper.ReplyWithError(Context.Message, 
+					"This user agent has already been added.",
+					Context.HttpServerManager.GetIp + "/images/error.png");
                 return;
             }
 
@@ -29,7 +33,9 @@ namespace Maina.Owner.Commands
         {
             if (!Context.Config.UserAgents.Contains(agent))
             {
-                await ReplyAsync("This user agent has not been added.");
+				await DiscordAPIHelper.ReplyWithError(Context.Message, 
+					"This user agent has not been added.",
+					Context.HttpServerManager.GetIp + "/images/error.png");
                 return;
             }
 
@@ -43,7 +49,9 @@ namespace Maina.Owner.Commands
         {
             if (Context.Config.UserAgents.Count == 0)
             {
-                await ReplyAsync("No user agents have been added");
+				await DiscordAPIHelper.ReplyWithError(Context.Message, 
+					"No user agents have been added",
+					Context.HttpServerManager.GetIp + "/images/error.png");
                 return;
             }
 

@@ -15,7 +15,7 @@ namespace Maina.HTTP.Server
 	{
 
 		public override string Prefix {
-			get { return "/rss/"; }
+			get { return "rss/"; }
 		}
 
 
@@ -57,7 +57,10 @@ namespace Maina.HTTP.Server
 
 			try {
 				RSSFeed[] feeds = null;
-				if (request.Headers.Get("Action") == null || request.Headers.Get("Action") != "List-Feeds")
+				if (!CheckTrustedAgent(context, out answered))
+					return answered;
+
+				else if (request.Headers.Get("Action") == null || request.Headers.Get("Action") != "List-Feeds")
 					answered = RespondToRequest(context, HttpStatusCode.NotAcceptable); //Not acceptable
 				
 				else if ((feeds =_databaseManager.GetAll<RSSFeed>("https://mangadex.org/rss/")) == null)
@@ -79,9 +82,12 @@ namespace Maina.HTTP.Server
 			bool answered = false;
 			string payload = "";
 			HttpListenerRequest request = context.Request;
-			try {
 
-				if (!request.HasEntityBody)
+			try {
+				if (!CheckTrustedAgent(context, out answered))
+					return answered;
+
+				else if (!request.HasEntityBody)
 					answered = RespondToRequest(context, HttpStatusCode.BadRequest); //Bad Request
 
 				else if (request.Headers.Get("Signature") == null)

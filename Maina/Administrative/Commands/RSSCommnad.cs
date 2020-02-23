@@ -21,8 +21,10 @@ namespace Maina.Administrative.Commands
 			EmbedBuilder eb = null;
 			RSSFeed[] feeds = Context.Database.GetAll<RSSFeed>("https://mangadex.org/rss/");
 			if (feeds == null || feeds.Length == 0) {
-				eb = CreateEmbed(EmbedColor.Red);
-				eb.WithAuthor("No available RSS Feeds :C");
+				await DiscordAPIHelper.ReplyWithError(Context.Message, 
+					"No available RSS Feeds.",
+					Context.HttpServerManager.GetIp + "/images/error.png");
+				return;
 			}
 			else {
 				eb = CreateEmbed(EmbedColor.SalmonPink);
@@ -49,15 +51,15 @@ namespace Maina.Administrative.Commands
 					await ReplyAsync(string.Empty, eb.Build(), false, false);
 				}
 				else {
-					EmbedBuilder eb = CreateEmbed(EmbedColor.Red);
-					eb.WithAuthor("I'm already subscribed to that RSS feed.");
-					await ReplyAsync(string.Empty, eb.Build(), false, false);
+					await DiscordAPIHelper.ReplyWithError(Context.Message, 
+						"I'm already subscribed to that RSS feed.",
+						Context.HttpServerManager.GetIp + "/images/error.png");
 				}
 			}
 			else {
-				EmbedBuilder eb = CreateEmbed(EmbedColor.Red);
-				eb.WithAuthor("That's not a valid RSS feed URL.");
-				await ReplyAsync(string.Empty, eb.Build(), false, false);
+				await DiscordAPIHelper.ReplyWithError(Context.Message, 
+					"That's not a valid RSS feed URL.",
+					Context.HttpServerManager.GetIp + "/images/error.png");
 			}
 
 		}
@@ -76,9 +78,9 @@ namespace Maina.Administrative.Commands
 				await ReplyAsync(string.Empty, eb.Build(), false, false);
 			}
 			else {
-				EmbedBuilder eb = CreateEmbed(EmbedColor.Red);
-				eb.WithAuthor("I'm not subscribed to that RSS feed.");
-				await ReplyAsync(string.Empty, eb.Build(), false, false);
+				await DiscordAPIHelper.ReplyWithError(Context.Message, 
+					"I'm not subscribed to that RSS feed.",
+					Context.HttpServerManager.GetIp + "/images/error.png");
 			}
 
 
