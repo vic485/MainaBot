@@ -53,7 +53,9 @@ namespace Maina.Administrative.Commands
         {
             if (Context.GuildConfig.SelfRoles.Count == 0)
             {
-                await ReplyAsync("Guild has no self assignable roles");
+				await DiscordAPIHelper.ReplyWithError(Context.Message, 
+					"Guild has no self assignable roles.",
+					Context.HttpServerManager.GetIp + "/images/error.png");
                 return;
             }
             
@@ -101,7 +103,9 @@ namespace Maina.Administrative.Commands
 
             if (!Context.GuildConfig.SelfRoles.ContainsKey(emote.ToString()))
             {
-                await ReplyAsync($"There is not a role assigned to {emote.ToString()}");
+				await DiscordAPIHelper.ReplyWithError(Context.Message, 
+					$"There is not a role assigned to {emote.ToString()}",
+					Context.HttpServerManager.GetIp + "/images/error.png");
                 return;
             }
 
@@ -133,7 +137,7 @@ namespace Maina.Administrative.Commands
 				if (Context.GuildConfig.SelfRoles.Keys.Count > 0)
 					embedBuilder.AddField("**Self Roles**", sb.ToString());
 				else
-					embedBuilder.AddField("**There are no Self Roles**", "ごめんなさい");
+					embedBuilder.AddField("**There are no Self Roles**", "ごめんね");
 
 				await message.ModifyAsync(x => x.Embed = embedBuilder.Build());
 
@@ -159,7 +163,9 @@ namespace Maina.Administrative.Commands
 			IUserMessage message = await GetSelfRoleMessage();
             if (message == null)
             {
-                await ReplyAsync("Could not find self role message. Perhaps try re-posting it?");
+				await DiscordAPIHelper.ReplyWithError(Context.Message, 
+					"Could not find self role message. Perhaps try re-posting it?",
+					Context.HttpServerManager.GetIp + "/images/error.png");
                 return;
             }
 			await UpdateSelfRoleMessage(message);

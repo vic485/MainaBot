@@ -28,9 +28,9 @@ namespace Maina.Administrative.Commands
 				await ReplyAsync(string.Empty, eb.Build(), false, false);
 			}
 			else {
-				EmbedBuilder eb = CreateEmbed(EmbedColor.Red);
-				eb.WithAuthor("No news channel set :C");
-				await ReplyAsync(string.Empty, eb.Build(), false, false);
+				await DiscordAPIHelper.ReplyWithError(Context.Message, 
+					"No news channel set.",
+					Context.HttpServerManager.GetIp + "/images/error.png");
 			}
 		}
 
@@ -80,9 +80,9 @@ namespace Maina.Administrative.Commands
 				if (atLeastOneRole)
 					await ReplyAsync(string.Empty, eb.Build(), false, true);
 				else {
-					eb = CreateEmbed(EmbedColor.Red);
-					eb.WithAuthor($"No roles assigned to tags :C");
-					await ReplyAsync(string.Empty, eb.Build(), false, true);
+					await DiscordAPIHelper.ReplyWithError(Context.Message, 
+						"No roles assigned to tags.",
+						Context.HttpServerManager.GetIp + "/images/error.png");
 				}
 			}
 
@@ -132,8 +132,10 @@ namespace Maina.Administrative.Commands
 						eb.WithDescription($"I will no longer ping {role.Mention} for all news.");
 					}
 					else {
-						eb = CreateEmbed(EmbedColor.Red);
-						eb.WithAuthor($"There was no role for all news.");
+						await DiscordAPIHelper.ReplyWithError(Context.Message, 
+							"There is no role for all news.",
+							Context.HttpServerManager.GetIp + "/images/error.png");
+						return;
 					}
 
 					await ReplyAsync(string.Empty, eb.Build(), false, true);
@@ -152,8 +154,9 @@ namespace Maina.Administrative.Commands
 						eb.WithDescription($"I will no longer ping {role.Mention} for news with {tag} tag.");
 					}
 					else {
-						eb = CreateEmbed(EmbedColor.Red);
-						eb.WithAuthor($"There is no role linked to that tag.");
+						await DiscordAPIHelper.ReplyWithError(Context.Message, 
+							"There is no role linked to that tag.",
+							Context.HttpServerManager.GetIp + "/images/error.png");
 					}
 
 					await ReplyAsync(string.Empty, eb.Build(), false, true);

@@ -18,7 +18,7 @@ namespace Maina.HTTP.Server
 	{
 
 		public override string Prefix {
-			get { return "/webhooks/"; }
+			get { return "webhooks/"; }
 		}
 
 		
@@ -33,7 +33,10 @@ namespace Maina.HTTP.Server
 			HttpListenerRequest request = context.Request;
 			
 			try {
-				if (request.HttpMethod != "POST")
+				if (!CheckTrustedAgent(context, out answered))
+					return answered;
+
+				else if (request.HttpMethod != "POST")
 					answered = RespondToRequest(context, HttpStatusCode.MethodNotAllowed); //Method not allowed
 
 				else if (!request.HasEntityBody)

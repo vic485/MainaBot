@@ -23,6 +23,10 @@ namespace Maina.HTTP
 
 		private Server.HTTPServer _listener = null;
 
+		public string GetIp {
+			get { return "http://" + _listener.IP + ":" + _listener.Port; }
+		}
+
 		/// <summary>
 		/// A newly created WebHooksManager is not listening to any requests. Use Initialize to start listening.
 		/// </summary>
@@ -36,11 +40,8 @@ namespace Maina.HTTP
 
 		public void ChangeAgents(List<string> agentList)
 		{
-			_listener?.TrustedUserAgents.Clear();
-			foreach (var agent in agentList)
-			{
-				_listener?.TrustedUserAgents.Add(agent);
-			}
+			RequestHandler.TrustedUserAgents.Clear();
+			RequestHandler.TrustedUserAgents.AddRange(agentList);
 		}
 			
 
@@ -75,8 +76,10 @@ namespace Maina.HTTP
 
 			_listener = new HTTPServer (8080, _discordSocketClient, _databaseManager);
 			_listener.Error += OnHTTPServerError;
-			if (_trustedUserAgents != null)
-				_listener.TrustedUserAgents.AddRange(_trustedUserAgents);
+			if (_trustedUserAgents != null) {
+				RequestHandler.TrustedUserAgents.Clear();
+				RequestHandler.TrustedUserAgents.AddRange(_trustedUserAgents);
+			}
 			Task.Run(() => _listener.StartListening());
 		}
 

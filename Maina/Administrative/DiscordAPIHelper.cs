@@ -1,5 +1,6 @@
 ﻿using Discord;
 using Discord.WebSocket;
+using Maina.Core;
 using Maina.Database;
 using Maina.Database.Models;
 using System;
@@ -11,6 +12,15 @@ namespace Maina.Administrative
 {
 	public class DiscordAPIHelper
 	{
+		public static async Task<IUserMessage> ReplyWithError (IUserMessage message, string errorMessage, string imageUrl = null) {
+			EmbedBuilder eb = new EmbedBuilder {Color = new Color((uint)EmbedColor.Red) };
+			if (imageUrl != null)
+				eb.WithThumbnailUrl(imageUrl);
+			eb.WithAuthor(errorMessage);
+			await message.Channel.TriggerTypingAsync().ConfigureAwait(false);
+            return await message.Channel.SendMessageAsync(string.Empty, false, eb.Build());
+		}
+
 
 		public static async Task DeleteAllReactionsWithEmote (IUserMessage message, IEmote emote) {
 			if (message.Reactions.ContainsKey(emote)) {

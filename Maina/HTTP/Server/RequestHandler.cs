@@ -4,6 +4,7 @@ using Maina.Core.Logging;
 using Maina.Database;
 using Maina.Database.Models;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Security.Cryptography;
@@ -54,6 +55,53 @@ namespace Maina.HTTP.Server
 			}
 		}
 
+		public static bool RespondToRequest(HttpListenerContext context, HttpStatusCode code, byte[] body, string extension) {
+			try {
+				HttpListenerResponse response = context.Response;
+				response.StatusCode = (int)code;
+				response.ContentType = "image/" + extension.Substring(1);
+			
+				if (body != null) {
+					response.ContentLength64 = body.Length;
+					using (Stream output = response.OutputStream) {
+						output.Write(body, 0, body.Length);
+						output.Close();
+					}
+				}
+				else
+					response.Close();
+				return true;
+			}
+			catch (Exception) {
+				return false;
+			}
+		}
+
+		
+		public static List<string> TrustedUserAgents {
+			get; private set;
+		} = new List<string>();
+		protected bool CheckTrustedAgent (HttpListenerContext context, out bool answered) {
+			bool isTrusted = false;
+			answered = false;
+			
+			HttpListenerRequest request = context.Request;
+
+			try {
+				if (request.UserAgent == null || TrustedUserAgents.Find(x => request.UserAgent.Contains(x)) == null)
+					answered = RespondToRequest(context, HttpStatusCode.Unauthorized); //Unauthorized
+
+				else
+					isTrusted = true;
+				
+			}
+			catch (Exception e) {
+				Logger.LogError("Error checking trusted agent: " + e.Message);
+			}
+
+			return isTrusted;
+		}
+
 		public bool VerifySignature (string receivedSignature, byte[] payload) {
 			string token = _databaseManager.Get<BotConfig>("Config").SecretToken;
 			HMACSHA1 hmac = new HMACSHA1(Encoding.ASCII.GetBytes(token));
@@ -67,6 +115,7 @@ namespace Maina.HTTP.Server
 
 			return receivedSignature == expectedSignature;
 		}
+
 
 
 	}
