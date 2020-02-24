@@ -79,9 +79,7 @@ namespace Maina.HTTP.Server
 				DirectoryInfo dTarget = new DirectoryInfo(relativePath);
 
 				DirectoryInfo dContainer = new DirectoryInfo(_CONTAINER_FOLDER);
-				Logger.LogVerbose("Dir Target: " + dTarget.FullName);
-				Logger.LogVerbose("Dir Container: " + dContainer.FullName);
-
+				
 				while (dTarget.Parent != null && !isContained) {
 					if (dTarget.Parent.FullName == dContainer.FullName)
 						isContained = true;
