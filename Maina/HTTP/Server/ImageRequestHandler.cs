@@ -23,21 +23,21 @@ namespace Maina.HTTP.Server
 		{
 			bool answered = false;
 			HttpListenerRequest request = context.Request;
-			
+
 			try {
 				if (request.HttpMethod == "GET")
 					answered = ProcessGet(context);
 
 				else if (request.HttpMethod == "POST")
 					answered = ProcessPost(context);
-				
+
 				else
 					answered = RespondToRequest(context, HttpStatusCode.MethodNotAllowed); //Method not allowed
 			}
 			catch (Exception e) {
 				Logger.LogError("Error processing " + Prefix + " request: " + e.Message);
 			}
-				
+
 			return answered;
 		}
 
@@ -55,12 +55,12 @@ namespace Maina.HTTP.Server
 					answered = RespondToRequest(context, HttpStatusCode.NotFound);
 
 				else {
-					answered = RespondToRequest(context, 
-						HttpStatusCode.OK, 
-						File.ReadAllBytes(relativePath), 
+					answered = RespondToRequest(context,
+						HttpStatusCode.OK,
+						File.ReadAllBytes(relativePath),
 						new FileInfo(relativePath).Extension);
 				}
-				
+
 			}
 			catch (Exception e) {
 				Logger.LogError("Error processing " + Prefix + " GET request: " + e.Message);
@@ -79,6 +79,8 @@ namespace Maina.HTTP.Server
 				DirectoryInfo dTarget = new DirectoryInfo(relativePath);
 
 				DirectoryInfo dContainer = new DirectoryInfo(_CONTAINER_FOLDER);
+				Logger.LogVerbose("Dir Target: " + dTarget.FullName);
+				Logger.LogVerbose("Dir Container: " + dContainer.FullName);
 
 				while (dTarget.Parent != null && !isContained) {
 					if (dTarget.Parent.FullName == dContainer.FullName)
@@ -87,7 +89,7 @@ namespace Maina.HTTP.Server
 				}
 
 			}
-			catch (Exception e) { 
+			catch (Exception e) {
 				Logger.LogError("Error ensuring path is contained during processing of " + Prefix + " GET request: " + e.Message);
 			}
 
@@ -140,11 +142,11 @@ namespace Maina.HTTP.Server
 							}
 							RespondToRequest(context, HttpStatusCode.OK);
 						}
-					
+
 
 						input.Close();
 					}
-										
+
 
 				}
 
