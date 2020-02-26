@@ -59,8 +59,9 @@ namespace Maina.Administrative.Commands
                 return;
             }
             
-			if ((Context.Guild.GetChannel(Context.GuildConfig.SelfRoleMenu[0]) is SocketTextChannel channel &&
-                  await channel.GetMessageAsync(Context.GuildConfig.SelfRoleMenu[1]) is IUserMessage prevMessage))
+			if (Context.GuildConfig.DefaultSelfRoleMenu.ha)
+			if ((Context.Guild.GetChannel(Context.GuildConfig.DefaultSelfRoleMenu.Value.Channel) is SocketTextChannel channel &&
+                  await channel.GetMessageAsync(Context.GuildConfig.DefaultSelfRoleMenu.Value.Message) is IUserMessage prevMessage))
             {
                 await prevMessage.DeleteAsync();
             }
@@ -91,7 +92,9 @@ namespace Maina.Administrative.Commands
 				}
             }
             
-            Context.GuildConfig.SelfRoleMenu = new[] {message.Channel.Id, message.Id};
+			RoleMenu srm = Context.GuildConfig.DefaultSelfRoleMenu;
+            srm.Channel = message.Channel.Id;
+			srm.Message = message.Id;
             Context.Database.Save(Context.GuildConfig); // Save manually rather than sending another message
 			await Context.Message.DeleteAsync(); //It will look more clean if we delete the command message
         }
@@ -116,8 +119,8 @@ namespace Maina.Administrative.Commands
         }
 
 		private async Task<IUserMessage> GetSelfRoleMessage () {
-			if (!(Context.Guild.GetChannel(Context.GuildConfig.SelfRoleMenu[0]) is SocketTextChannel channel &&
-                  await channel.GetMessageAsync(Context.GuildConfig.SelfRoleMenu[1]) is IUserMessage message))
+			if (!(Context.Guild.GetChannel(Context.GuildConfig.DefaultSelfRoleMenu.Channel) is SocketTextChannel channel &&
+                  await channel.GetMessageAsync(Context.GuildConfig.DefaultSelfRoleMenu.Message) is IUserMessage message))
             {
                 return null;
             }

@@ -25,6 +25,7 @@ namespace Maina
                 if (args.Length == 1 && (args[0] == "-r" || args[0] == "--reset"))
                     services.GetRequiredService<DatabaseManager>().ResetConfig();
                 services.GetRequiredService<DatabaseManager>().CheckConfig();
+				services.GetRequiredService<DatabaseManager>().UpdateGuilds();
                 await services.GetRequiredService<DiscordHandler>().InitializeAsync(services).ConfigureAwait(false);
 
                 var trusted = services.GetRequiredService<DatabaseManager>().Get<BotConfig>("Config").UserAgents

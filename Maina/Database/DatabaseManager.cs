@@ -167,6 +167,16 @@ namespace Maina.Database
             }
         }
 
+
+		public void UpdateGuilds () {
+			try {
+				GetAllGuilds();
+			}
+			catch(Exception e) {
+
+			}
+		}
+
 		#endregion
 
 		public void Dispose()

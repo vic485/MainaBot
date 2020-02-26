@@ -232,21 +232,26 @@ namespace Maina.Core
         private async Task ReactionAddedAsync(Cacheable<IUserMessage, ulong> cacheable, ISocketMessageChannel channel,
             SocketReaction reaction)
         {
-            var message = await cacheable.GetOrDownloadAsync();
-            if (!(reaction.Channel is SocketGuildChannel guildChannel && reaction.User.Value is SocketGuildUser user))
-                return;
+			try {
+				var message = await cacheable.GetOrDownloadAsync();
+				if (!(reaction.Channel is SocketGuildChannel guildChannel && reaction.User.Value is SocketGuildUser user))
+					return;
 
-            var guild = guildChannel.Guild;
-            var config = _database.Get<GuildConfig>($"guild-{guild.Id}");
+				var guild = guildChannel.Guild;
+				var config = _database.Get<GuildConfig>($"guild-{guild.Id}");
 
-            if (message.Id != config.SelfRoleMenu[1])
-                return;
+				if (message.Id != config.DefaultSelfRoleMenu.Message)
+					return;
 
-            if (!config.SelfRoles.ContainsKey(reaction.Emote.ToString()))
-                return;
+				if (!config.SelfRoles.ContainsKey(reaction.Emote.ToString()))
+					return;
 
-            var role = guild.GetRole(config.SelfRoles[reaction.Emote.ToString()]);
-            await user.AddRoleAsync(role);
+				var role = guild.GetRole(config.SelfRoles[reaction.Emote.ToString()]);
+				await user.AddRoleAsync(role);
+			}
+			catch (Exception e) {
+
+			}
             //await (await user.GetOrCreateDMChannelAsync()).SendMessageAsync($"You have received the role {role.Name}");
         }
 
@@ -260,7 +265,7 @@ namespace Maina.Core
             var guild = guildChannel.Guild;
             var config = _database.Get<GuildConfig>($"guild-{guild.Id}");
 
-            if (message.Id != config.SelfRoleMenu[1])
+            if (message.Id != config.DefaultSelfRoleMenu.Message)
                 return;
 
 			
