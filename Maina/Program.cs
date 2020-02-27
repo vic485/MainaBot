@@ -11,6 +11,7 @@ using Maina.Database.Models;
 using Maina.RSS;
 using Maina.HTTP;
 using Microsoft.Extensions.DependencyInjection;
+using System.Collections.Generic;
 
 namespace Maina
 {
@@ -22,8 +23,7 @@ namespace Maina
 
             using (var services = SetupServices())
             {
-                if (args.Length == 1 && (args[0] == "-r" || args[0] == "--reset"))
-                    services.GetRequiredService<DatabaseManager>().ResetConfig();
+				CheckArguments (args, services);                
                 services.GetRequiredService<DatabaseManager>().CheckConfig();
                 await services.GetRequiredService<DiscordHandler>().InitializeAsync(services).ConfigureAwait(false);
 
@@ -41,7 +41,16 @@ namespace Maina
             }
         }
 
-        private static ServiceProvider SetupServices()
+		private static void CheckArguments(string[] args, ServiceProvider services)
+		{
+			List<string> argsList = new List<string>(args);
+			if (argsList.Contains("-r") || argsList.Contains("--reset"))
+				services.GetRequiredService<DatabaseManager>().ResetConfig();
+			if (argsList.Contains("--update-DB"))
+				services.GetRequiredService<DatabaseManager>().UpdateGuilds();
+		}
+
+		private static ServiceProvider SetupServices()
             => new ServiceCollection()
                 .AddSingleton(new DiscordSocketClient(new DiscordSocketConfig
                 {

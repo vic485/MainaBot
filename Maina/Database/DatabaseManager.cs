@@ -167,6 +167,35 @@ namespace Maina.Database
             }
         }
 
+
+		public void UpdateGuilds () {
+			try {
+				OldGuildConfig[] oldGuilds = GetAll<OldGuildConfig>("guild-");
+				if (oldGuilds != null) {
+					foreach (OldGuildConfig og in oldGuilds) {
+						GuildConfig ng = new GuildConfig{
+							Id = og.Id,
+							Prefix = og.Prefix,
+							NewsRoles = og.NewsRoles,
+							AllNewsRole = og.AllNewsRole,
+							NewsChannel = og.NewsChannel,
+							WelcomeChannel = og.WelcomeChannel,
+							WelcomeMessage = og.WelcomeMessage,
+						};
+						RoleMenu rm = ng.DefaultSelfRoleMenu;
+						rm.Channel = og.SelfRoleMenu[0];
+						rm.Message = og.SelfRoleMenu[1];
+						rm.SelfRoles = og.SelfRoles;
+						Remove<OldGuildConfig>(og);
+						Save<GuildConfig>(ng);
+					}
+				}
+			}
+			catch(Exception) {
+				Logger.LogInfo("No need to update guilds.");
+			}
+		}
+
 		#endregion
 
 		public void Dispose()

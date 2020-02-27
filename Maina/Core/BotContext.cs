@@ -18,6 +18,7 @@ namespace Maina.Core
         public GuildConfig GuildConfig { get; }
         public HTTPServerManager HttpServerManager { get; }
 
+		
         public BotContext(DiscordSocketClient client, SocketUserMessage msg, IServiceProvider provider) : base(client,
             msg)
         {
