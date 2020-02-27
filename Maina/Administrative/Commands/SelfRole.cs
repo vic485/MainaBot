@@ -36,7 +36,7 @@ namespace Maina.Administrative.Commands
         public async Task SelfRoleAdd(string em, SocketRole role, string list)
         {
 			if (Context.GuildConfig.SelfRoleMenus.ContainsKey(list)) {
-				await InternalSelfRoleAdd(em, role, Context.GuildConfig.SelfRoleMenus[list]);
+				await InternalSelfRoleAdd(em, role, Context.GuildConfig.SelfRoleMenus[list], list);
 			}
 			else {
 				await DiscordAPIHelper.ReplyWithError(Context.Message, 
@@ -46,18 +46,18 @@ namespace Maina.Administrative.Commands
 			
         }
 
-		private async Task InternalSelfRoleAdd (string em, SocketRole role, RoleMenu rm) {
+		private async Task InternalSelfRoleAdd (string em, SocketRole role, RoleMenu rm, string list = null) {
 			IEmote emote = GetEmote(em);
 			if (rm.SelfRoles.ContainsKey(emote.ToString()))
 			{
 				rm.SelfRoles[emote.ToString()] = role.Id;
-				await UpdateSelfRoleMessage(rm);
+				await UpdateSelfRoleMessage(rm, list);
 				await ReplyAsync($"Self role for {Emote.Parse(emote.ToString())} changed to `{role.Name}`",
 					updateGuild: true);
 			}
 			else {
 				rm.SelfRoles.Add(emote.ToString(), role.Id);
-				await UpdateSelfRoleMessage(rm);
+				await UpdateSelfRoleMessage(rm, list);
 				await ReplyAsync($"Added self role {role.Name} - {emote.ToString()}", updateGuild: true);
 			}
 		}
@@ -73,7 +73,7 @@ namespace Maina.Administrative.Commands
         public async Task SelfRoleRemoveAsync(string em, string list)
         {
             if (Context.GuildConfig.SelfRoleMenus.ContainsKey(list)) {
-				await InternalSelfRoleRemove(em, Context.GuildConfig.SelfRoleMenus[list]);
+				await InternalSelfRoleRemove(em, Context.GuildConfig.SelfRoleMenus[list], list);
 			}
 			else {
 				await DiscordAPIHelper.ReplyWithError(Context.Message, 
@@ -82,7 +82,7 @@ namespace Maina.Administrative.Commands
 			}
         }
 
-		private async Task InternalSelfRoleRemove (string em, RoleMenu rm) {
+		private async Task InternalSelfRoleRemove (string em, RoleMenu rm, string list = null) {
 			IEmote emote = GetEmote(em);
 
             if (!rm.SelfRoles.ContainsKey(emote.ToString()))
@@ -94,7 +94,7 @@ namespace Maina.Administrative.Commands
             }
 
             rm.SelfRoles.Remove(emote.ToString());
-			await UpdateSelfRoleMessage(rm);
+			await UpdateSelfRoleMessage(rm, list);
             await ReplyAsync($"Removed self role assigned to {emote.ToString()}", updateGuild: true);
 		}
 
@@ -212,7 +212,7 @@ namespace Maina.Administrative.Commands
 			return res;
 		}
 
-		private async Task UpdateSelfRoleMessage (RoleMenu rm) {
+		private async Task UpdateSelfRoleMessage (RoleMenu rm, string list) {
 			IUserMessage message = await GetSelfRoleMessage(rm);
 			if (message != null) {
 				EmbedBuilder embedBuilder = CreateEmbed(EmbedColor.SalmonPink);
@@ -223,8 +223,10 @@ namespace Maina.Administrative.Commands
 					sb.AppendLine($"{key} - {Context.Guild.GetRole(rm.SelfRoles[key]).Mention}\n");
 					reactions.Add(GetEmote(key));
 				}
-				if (rm.SelfRoles.Keys.Count > 0)
-					embedBuilder.AddField("**Self Roles**", sb.ToString());
+				if (rm.SelfRoles.Keys.Count > 0) {
+					string title = list ?? "Self Roles";
+					embedBuilder.AddField($"**{title}**", sb.ToString());
+				}
 				else
 					embedBuilder.AddField("**There are no Self Roles**", "ごめんね");
 
