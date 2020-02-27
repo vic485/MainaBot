@@ -240,13 +240,20 @@ namespace Maina.Core
 				var guild = guildChannel.Guild;
 				var config = _database.Get<GuildConfig>($"guild-{guild.Id}");
 
-				if (message.Id != config.DefaultSelfRoleMenu.Message)
+				RoleMenu rm = FindRoleMenu (config, reaction.Channel.Id, message.Id);
+				if (rm == null)
 					return;
 
-				if (!config.SelfRoles.ContainsKey(reaction.Emote.ToString()))
-					return;
+				string final = reaction.Emote.ToString();
+				if (!rm.SelfRoles.ContainsKey(final)) {
+					int index = final.IndexOf("<") + 1;
+					if (index != -1)
+						final= final.Insert(index, "a");
+					if (!rm.SelfRoles.ContainsKey(final))
+						return;
+				}
 
-				var role = guild.GetRole(config.SelfRoles[reaction.Emote.ToString()]);
+				var role = guild.GetRole(rm.SelfRoles[final]);
 				await user.AddRoleAsync(role);
 			}
 			catch (Exception e) {
@@ -255,7 +262,9 @@ namespace Maina.Core
             //await (await user.GetOrCreateDMChannelAsync()).SendMessageAsync($"You have received the role {role.Name}");
         }
 
-        private async Task ReactionRemovedAsync(Cacheable<IUserMessage, ulong> cacheable, ISocketMessageChannel channel,
+		
+
+		private async Task ReactionRemovedAsync(Cacheable<IUserMessage, ulong> cacheable, ISocketMessageChannel channel,
             SocketReaction reaction)
         {
             var message = await cacheable.GetOrDownloadAsync();
@@ -265,20 +274,21 @@ namespace Maina.Core
             var guild = guildChannel.Guild;
             var config = _database.Get<GuildConfig>($"guild-{guild.Id}");
 
-            if (message.Id != config.DefaultSelfRoleMenu.Message)
+			RoleMenu rm = FindRoleMenu (config, reaction.Channel.Id, message.Id);
+            if (rm == null)
                 return;
 
 			
 			string final = reaction.Emote.ToString();
-			if (!config.SelfRoles.ContainsKey(final)) {
+			if (!rm.SelfRoles.ContainsKey(final)) {
 				int index = final.IndexOf("<") + 1;
 				if (index != -1)
 					final= final.Insert(index, "a");
-				if (!config.SelfRoles.ContainsKey(final))
+				if (!rm.SelfRoles.ContainsKey(final))
 					return;
 			}
 
-			var role = guild.GetRole(config.SelfRoles[final]);
+			var role = guild.GetRole(rm.SelfRoles[final]);
 
             if (!user.Roles.Contains(role))
                 return;
@@ -286,6 +296,18 @@ namespace Maina.Core
             await user.RemoveRoleAsync(role);
             //await (await user.GetOrCreateDMChannelAsync()).SendMessageAsync($"Removed role {role.Name}");
         }
+
+
+		private RoleMenu FindRoleMenu(GuildConfig config, ulong channelId, ulong messageId)
+		{
+			RoleMenu res = null;
+			foreach (RoleMenu rm in config.SelfRoleMenus.Values) {
+				if (rm.Channel.HasValue && rm.Channel.Value == channelId &&
+					rm.Message.HasValue && rm.Message.Value == messageId)
+					return rm;
+			}
+			return res;
+		}
 
         #endregion
     }
