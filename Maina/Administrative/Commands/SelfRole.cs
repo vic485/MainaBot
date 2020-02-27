@@ -52,13 +52,13 @@ namespace Maina.Administrative.Commands
 			{
 				rm.SelfRoles[emote.ToString()] = role.Id;
 				await UpdateSelfRoleMessage(rm, list);
-				await ReplyAsync($"Self role for {Emote.Parse(emote.ToString())} changed to `{role.Name}`",
+				await ReplyAsync($"Self role for {Emote.Parse(emote.ToString())} changed to `{role.Name}` in {list ?? "default"} menu.",
 					updateGuild: true);
 			}
 			else {
 				rm.SelfRoles.Add(emote.ToString(), role.Id);
 				await UpdateSelfRoleMessage(rm, list);
-				await ReplyAsync($"Added self role {role.Name} - {emote.ToString()}", updateGuild: true);
+				await ReplyAsync($"Added self role {role.Name} - {emote.ToString()} to {list ?? "default"} menu.", updateGuild: true);
 			}
 		}
 			   		 
@@ -88,14 +88,14 @@ namespace Maina.Administrative.Commands
             if (!rm.SelfRoles.ContainsKey(emote.ToString()))
             {
 				await DiscordAPIHelper.ReplyWithError(Context.Message, 
-					$"There is not a role assigned to {emote.ToString()}",
+					$"There is not a role assigned to {emote.ToString()} in {list ?? "default"} menu.",
 					Context.HttpServerManager.GetIp + "/images/error.png");
                 return;
             }
 
             rm.SelfRoles.Remove(emote.ToString());
 			await UpdateSelfRoleMessage(rm, list);
-            await ReplyAsync($"Removed self role assigned to {emote.ToString()}", updateGuild: true);
+            await ReplyAsync($"Removed self role assigned to {emote.ToString()} in {list ?? "default"} menu.", updateGuild: true);
 		}
 
 
@@ -122,7 +122,7 @@ namespace Maina.Administrative.Commands
 			if (rm.SelfRoles.Count == 0)
 			{
 				await DiscordAPIHelper.ReplyWithError(Context.Message, 
-					$"Guild has no self assignable roles in that menu.",
+					$"Guild has no self assignable roles in {list ?? "default"} menu.",
 					Context.HttpServerManager.GetIp + "/images/error.png");
 				return;
 			}
@@ -228,7 +228,7 @@ namespace Maina.Administrative.Commands
 					embedBuilder.AddField($"**{title}**", sb.ToString());
 				}
 				else
-					embedBuilder.AddField("**There are no Self Roles**", "ごめんね");
+					embedBuilder.AddField($"**There are no roles in {list ?? "default"} self role menu**", "ごめんね");
 
 				await message.ModifyAsync(x => x.Embed = embedBuilder.Build());
 
