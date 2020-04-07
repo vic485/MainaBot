@@ -81,18 +81,20 @@ namespace Maina.HTTP.Server
 			try {
 				GitHubWebHookData ghdata = JsonConvert.DeserializeObject<GitHubWebHookData>(payload);
 
-				EmbedBuilder eb = null;
-				eb = new EmbedBuilder { Color = new Color((uint) EmbedColor.SalmonPink) };
-				eb.WithAuthor("I've heard some great news!");
-				eb.WithThumbnailUrl(ghdata.repository.html_url + "/raw/master/thumbnail.png");
-				eb.WithTitle(ghdata.release.name);
-				eb.WithUrl(ghdata.release.html_url);
-				eb.WithDescription("There is a new version of Miharu Available!");
+				if (ghdata.action == "released") {
+					EmbedBuilder eb = null;
+					eb = new EmbedBuilder { Color = new Color((uint) EmbedColor.SalmonPink) };
+					eb.WithAuthor("I've heard some great news!");
+					eb.WithThumbnailUrl(ghdata.repository.html_url + "/raw/master/thumbnail.png");
+					eb.WithTitle(ghdata.release.name);
+					eb.WithUrl(ghdata.release.html_url);
+					eb.WithDescription("There is a new version of Miharu Available!");
 
-				List<string> tags = new List<string>();
-				tags.Add("Miharu");
+					List<string> tags = new List<string>();
+					tags.Add("Miharu");
 
-				await DiscordAPIHelper.PublishNews(eb, _databaseManager, _discordSocketClient, tags.ToArray());
+					await DiscordAPIHelper.PublishNews(eb, _databaseManager, _discordSocketClient, tags.ToArray());
+				}
 			}
 			catch (Exception e) {
 				Logger.LogError("Error processing GitHub release payload: " + e.Message);
