@@ -6,6 +6,7 @@ using Maina.Core;
 
 namespace Maina.General.Commands
 {
+    [Name("General")]
     public class PingCommand : MainaBase
     {
         [Command("ping")]

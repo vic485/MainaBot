@@ -11,7 +11,7 @@ using Maina.Database.Models;
 
 namespace Maina.Administrative.Commands
 {
-	[Group("rss")]
+	[Name("Administrative"), Group("rss")]
 	[RequireUserPermission(GuildPermission.ManageChannels)]
 	public class RSSSubCommand : MainaBase {
 		[Command("list")]

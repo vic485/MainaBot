@@ -9,7 +9,7 @@ using Maina.HTTP.Server;
 
 namespace Maina.Owner.Commands
 {
-    [RequireOwner, Group("useragent")]
+    [Name("Owner"), RequireOwner, Group("useragent")]
     public class UserAgent : MainaBase
     {
         [Command("add")]

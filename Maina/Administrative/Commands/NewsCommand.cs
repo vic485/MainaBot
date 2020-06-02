@@ -12,7 +12,7 @@ namespace Maina.Administrative.Commands
 {
 
 
-	[Group("news")]
+	[Name("Administrative"), Group("news")]
 	public class NewsCommand : MainaBase
 	{
 		[Command("channel")]
@@ -53,7 +53,7 @@ namespace Maina.Administrative.Commands
 
 
 
-		[Group("role")]
+		[Group("role")] // TODO: nested groups cause issues with help command
 		[RequireUserPermission(GuildPermission.ManageRoles)]
 		public class RoleSubCommand : MainaBase {
 			[Command("list")]

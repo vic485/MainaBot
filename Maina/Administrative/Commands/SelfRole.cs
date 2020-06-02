@@ -12,7 +12,7 @@ using Maina.Database.Models;
 
 namespace Maina.Administrative.Commands
 {
-    [RequireBotPermission(GuildPermission.ManageRoles), RequireUserPermission(GuildPermission.ManageRoles)]
+    [Name("Administrative"), Group("selfrole"), RequireBotPermission(GuildPermission.ManageRoles), RequireUserPermission(GuildPermission.ManageRoles)]
     public class SelfRole : MainaBase
     {
 		
@@ -26,13 +26,13 @@ namespace Maina.Administrative.Commands
 			return resEmote;
 		}
 
-        [Command("selfrole add")]
+        [Command("add")]
         public async Task SelfRoleAdd(string em, SocketRole role)
         {
 			await InternalSelfRoleAdd(em, role, Context.GuildConfig.DefaultSelfRoleMenu);
         }
 
-		[Command("selfrole add")]
+		[Command("add")]
         public async Task SelfRoleAdd(string em, SocketRole role, string list)
         {
 			if (Context.GuildConfig.SelfRoleMenus.ContainsKey(list)) {
@@ -63,13 +63,13 @@ namespace Maina.Administrative.Commands
 		}
 			   		 
 
-        [Command("selfrole remove")]
+        [Command("remove")]
         public async Task SelfRoleRemoveAsync(string em)
         {
             await InternalSelfRoleRemove(em, Context.GuildConfig.DefaultSelfRoleMenu);
         }
 
-		[Command("selfrole remove")]
+		[Command("remove")]
         public async Task SelfRoleRemoveAsync(string em, string list)
         {
             if (Context.GuildConfig.SelfRoleMenus.ContainsKey(list)) {
@@ -99,13 +99,13 @@ namespace Maina.Administrative.Commands
 		}
 
 
-		[Command("selfrole list")]
+		[Command("list")]
         public async Task SelfRoleListAsync()
         {
 			await InternalSelfRoleList(Context.GuildConfig.DefaultSelfRoleMenu);
         }
 
-		[Command("selfrole list")]
+		[Command("list")]
         public async Task SelfRoleListAsync(string list)
         {
 			if (Context.GuildConfig.SelfRoleMenus.ContainsKey(list)) {
@@ -169,7 +169,7 @@ namespace Maina.Administrative.Commands
 		}
 
 
-		[Command("selfrole list create")]
+		[Command("list create")]
         public async Task SelfRoleListCreateAsync(string list)
         {
 			if (Context.GuildConfig.SelfRoleMenus.ContainsKey(list)) {
@@ -184,7 +184,7 @@ namespace Maina.Administrative.Commands
         }
 
 
-		[Command("selfrole list delete")]
+		[Command("list delete")]
         public async Task SelfRoleListDeleteAsync(string list)
         {
 			if (!Context.GuildConfig.SelfRoleMenus.ContainsKey(list)) {
