@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Discord.Commands;
 using Maina.Core;
@@ -13,21 +14,47 @@ namespace Maina.General.Commands
         private HelpCommand(CommandService commandService) => _commandService = commandService;
 
         [Command("help")]
-        public Task ShowHelpAsync()
+        public async Task ShowHelpAsync(string commandThatNeedsHelp = null)
         {
+            string title = commandThatNeedsHelp == null ? "List of all commands" : ("List of commands for " + commandThatNeedsHelp);
             var embed = CreateEmbed(EmbedColor.SalmonPink)
-                .WithAuthor("List of all commands", Context.Client.CurrentUser.GetAvatarUrl());
+                .WithAuthor(title, Context.Client.CurrentUser.GetAvatarUrl());
 
-            // We may not need this for Maina
-            var commandList = _commandService.Commands.Where(x => x.Module.Name != "Owner");
+                        
+            IEnumerable<CommandInfo> commandList;
+            var owner = (await Context.Client.GetApplicationInfoAsync()).Owner;
+            if (owner == Context.User)
+                commandList = _commandService.Commands;
+            else
+                commandList = _commandService.Commands.Where(x => x.Module.Name != "Owner");
 
-            foreach (var commands in commandList.GroupBy(x => x.Module.Name).OrderBy(y => y.Key))
-            {
-                embed.AddField(commands.Key,
-                    $"`{string.Join("`, `", commands.Select(x => x.Module.Group ?? x.Name).Distinct())}`");
+
+            if (commandThatNeedsHelp == null) {
+                foreach (var commands in commandList.Where(
+                        w => w.Module.Parent == null)
+                        .GroupBy(x => x.Module.Name)
+                        .OrderBy(y => y.Key))
+                {
+                    var group = commands.Select(x => x.Module.Group ?? x.Name).Distinct();
+                    embed.AddField(commands.Key,
+                        $"`{string.Join("`, `", group)}`");
+                }
+            }
+            else {
+                foreach (var commands in commandList.Where(
+                        w => w.Module.Group == commandThatNeedsHelp ||w.Module.Parent != null && w.Module.Parent.Group == commandThatNeedsHelp)
+                        .GroupBy(x => x.Module.Name)
+                        .OrderBy(y => y.Key))
+                {
+                    var group = commands.Select(x => x.Name).Distinct();
+                    embed.AddField(commands.Key,
+                        $"`{string.Join("`, `", group)}`");
+                }
             }
 
-            return ReplyAsync(string.Empty, embed.Build());
+            ReplyAsync(string.Empty, embed.Build());
+            
         }
+
     }
 }

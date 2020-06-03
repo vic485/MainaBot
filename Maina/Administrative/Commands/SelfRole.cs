@@ -202,7 +202,7 @@ namespace Maina.Administrative.Commands
 
 		private async Task<IUserMessage> GetSelfRoleMessage (RoleMenu rm) {
 			IUserMessage res = null;
-			if (rm.Channel.HasValue && rm.Channel.HasValue) {
+			if (rm.Channel.HasValue && rm.Message.HasValue) {
 				if (Context.Guild.GetChannel(rm.Channel.Value) is SocketTextChannel channel &&
 					  await channel.GetMessageAsync(rm.Message.Value) is IUserMessage message)
 				{
