@@ -9,7 +9,7 @@ namespace Maina.Configuration
         /// <summary>
         /// Name of the database to access
         /// </summary>
-        public string DatabaseName { get; set; } = "Reimu";
+        public string DatabaseName { get; set; } = "Maina";
 
         /// <summary>
         /// Urls to access database nodes
@@ -25,6 +25,7 @@ namespace Maina.Configuration
         /// <summary>
         /// X509 certificate to authenticate with the database, if required
         /// </summary>
+        [JsonIgnore]
         public X509Certificate2 Certificate
             => !string.IsNullOrWhiteSpace(CertificatePath) ? new X509Certificate2(CertificatePath) : null;
     }

@@ -2,7 +2,6 @@
 using Maina.Core.Logging;
 using Maina.Database.Models;
 using Raven.Client.Documents;
-using Raven.Embedded;
 
 namespace Maina.Database
 {
@@ -10,10 +9,11 @@ namespace Maina.Database
     {
         public readonly IDocumentStore Store;
 
-        public DatabaseManager()
+        public DatabaseManager(IDocumentStore _store)
         {
-            EmbeddedServer.Instance.StartServer();
-            Store = EmbeddedServer.Instance.GetDocumentStore("Maina");
+            //EmbeddedServer.Instance.StartServer();
+            //Store = EmbeddedServer.Instance.GetDocumentStore("Maina");
+            Store = _store;
         }
 
         /// <summary>

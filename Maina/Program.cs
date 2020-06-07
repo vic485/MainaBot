@@ -13,6 +13,7 @@ using Maina.HTTP;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
 using Maina.Configuration;
+using Raven.Client.Documents;
 
 namespace Maina
 {
@@ -69,6 +70,12 @@ namespace Maina
                     CaseSensitiveCommands = false,
                     DefaultRunMode = RunMode.Async
                 }))
+                .AddSingleton(new DocumentStore
+                {
+                    Certificate = _settings.Certificate,
+                    Database = _settings.DatabaseName,
+                    Urls = _settings.DatabaseUrls
+                }.Initialize())
                 .AddSingleton<DatabaseManager>()
                 .AddSingleton<DiscordHandler>()
                 .AddSingleton<HTTPServerManager>()
