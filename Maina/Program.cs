@@ -12,13 +12,17 @@ using Maina.RSS;
 using Maina.HTTP;
 using Microsoft.Extensions.DependencyInjection;
 using System.Collections.Generic;
+using Maina.Configuration;
 
 namespace Maina
 {
     internal static class Program
     {
+        private static LocalSettings _settings;
+        
         private static async Task Main(string[] args)
         {
+            _settings = SettingsLoader.Load();
             Logger.Initialize(LogType.Debug, Path.Combine(Directory.GetCurrentDirectory(), "log.txt"), "0.0.1");
 
             using (var services = SetupServices())
