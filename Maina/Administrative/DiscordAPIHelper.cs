@@ -24,8 +24,8 @@ namespace Maina.Administrative
 
 		public static async Task DeleteAllReactionsWithEmote (IUserMessage message, IEmote emote) {
 			if (message.Reactions.ContainsKey(emote)) {
-				using (var usersEnumerator = message.GetReactionUsersAsync(emote, int.MaxValue).GetEnumerator()) {
-					while (await usersEnumerator.MoveNext()) {
+				await using (var usersEnumerator = message.GetReactionUsersAsync(emote, int.MaxValue).GetAsyncEnumerator()) {
+					while (await usersEnumerator.MoveNextAsync()) {
 						foreach (IUser user in usersEnumerator.Current) {
 							await message.RemoveReactionAsync(emote, user);
 						}
